@@ -163,7 +163,12 @@ export class MemStorage implements IStorage {
 
   async createAsset(asset: InsertAsset): Promise<Asset> {
     const id = this.assetIdCounter++;
-    const newAsset: Asset = { ...asset, id };
+    // Make sure institution is never undefined to match the Asset type
+    const newAsset: Asset = { 
+      ...asset, 
+      id,
+      institution: asset.institution ?? null 
+    };
     this.assets.set(id, newAsset);
     return newAsset;
   }
@@ -256,7 +261,12 @@ export class MemStorage implements IStorage {
   
   async createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken> {
     const id = this.passwordResetTokenIdCounter++;
-    const newToken: PasswordResetToken = { ...token, id, createdAt: new Date() };
+    const newToken: PasswordResetToken = { 
+      ...token, 
+      id, 
+      createdAt: new Date(),
+      used: token.used ?? false, // Ensure used is a boolean, not undefined
+    };
     this.passwordResetTokens.set(id, newToken);
     return newToken;
   }

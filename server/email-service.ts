@@ -1,10 +1,45 @@
 import sgMail from '@sendgrid/mail';
 
-// Initialize SendGrid with API key
-if (!process.env.SENDGRID_API_KEY) {
-  console.warn('SENDGRID_API_KEY environment variable is not set. Email functionality will not work.');
+// Initialize SendGrid with API key if available
+const isDev = process.env.NODE_ENV === 'development';
+let useSendGrid = false;
+
+// In development mode, we can use a console-based email service
+// This allows the app to work without requiring a real SendGrid API key for testing
+if (isDev) {
+  // Always use console-based email in development for predictable testing
+  console.info('📧 [Email Service] Using development console-based email service.');
+  
+  // Still try to parse SendGrid key if available (for verbose logging)
+  if (process.env.SENDGRID_API_KEY) {
+    try {
+      if (process.env.SENDGRID_API_KEY.startsWith('SG.')) {
+        console.info('📧 [Email Service] Valid SendGrid API key detected, but using console logs in development.');
+      } else {
+        console.warn('📧 [Email Service] SendGrid API key does not start with "SG." - using console logs.');
+      }
+    } catch (error) {
+      console.warn('📧 [Email Service] Invalid SendGrid API key format.');
+    }
+  }
 } else {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  // In production, we require a valid SendGrid API key
+  if (!process.env.SENDGRID_API_KEY) {
+    console.error('📧 [Email Service] SENDGRID_API_KEY environment variable is not set in production mode!');
+  } else {
+    try {
+      // Validate format before setting
+      if (!process.env.SENDGRID_API_KEY.startsWith('SG.')) {
+        console.error('📧 [Email Service] SendGrid API key does not start with "SG." in production mode!');
+      } else {
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        useSendGrid = true;
+        console.info('📧 [Email Service] Using SendGrid API for emails in production.');
+      }
+    } catch (error) {
+      console.error('📧 [Email Service] Invalid SendGrid API key format in production mode!');
+    }
+  }
 }
 
 interface EmailData {
@@ -15,17 +50,47 @@ interface EmailData {
   html: string;
 }
 
+/**
+ * Sends an email using SendGrid or logs to console in development mode
+ */
 export async function sendEmail(data: EmailData): Promise<boolean> {
   try {
-    if (!process.env.SENDGRID_API_KEY) {
-      console.warn('Cannot send email: SENDGRID_API_KEY is not set');
-      return false;
+    // In development mode without SendGrid, log the email to console
+    if (isDev && !useSendGrid) {
+      console.log('');
+      console.log('========== DEVELOPMENT EMAIL ==========');
+      console.log(`TO: ${data.to}`);
+      console.log(`FROM: ${data.from}`);
+      console.log(`SUBJECT: ${data.subject}`);
+      console.log(`BODY: ${data.text || data.html.replace(/<[^>]*>?/gm, '')}`);
+      console.log('========================================');
+      console.log('');
+      
+      // For development testing, log the token from password reset emails
+      if (data.subject.includes('Reset') && data.html.includes('token=')) {
+        const tokenMatch = data.html.match(/token=([^"&]+)/);
+        if (tokenMatch && tokenMatch[1]) {
+          console.log('📧 [Password Reset] Token for testing: ' + tokenMatch[1]);
+          console.log(`📧 [Password Reset] Full URL: ${data.html.match(/href="([^"]+)"/)?.[1]}`);
+          console.log('');
+        }
+      }
+      
+      return true;
     }
     
-    await sgMail.send(data);
-    return true;
+    // Use SendGrid if available
+    if (useSendGrid) {
+      await sgMail.send(data);
+      console.info(`📧 [Email Service] Email sent successfully to ${data.to}`);
+      return true;
+    }
+    
+    // If neither SendGrid nor development mode is available
+    console.warn('📧 [Email Service] Email service not available. Email not sent.');
+    return false;
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('📧 [Email Service] Error sending email:', error);
     return false;
   }
 }
