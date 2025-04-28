@@ -1,6 +1,6 @@
 import React from "react";
 import { useLocation, Link } from "wouter";
-import { Home, CreditCard, Wallet, DollarSign, Receipt } from "lucide-react";
+import { Home, CreditCard, Wallet, DollarSign, Receipt, Settings } from "lucide-react";
 
 export function MobileNav() {
   const [location] = useLocation();
@@ -11,7 +11,7 @@ export function MobileNav() {
 
   return (
     <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border z-10">
-      <div className="grid grid-cols-5 h-16">
+      <div className="grid grid-cols-6 h-16">
         <Link href="/">
           <a className={`flex flex-col items-center justify-center ${isActive('/') ? 'text-primary' : 'text-muted-foreground'}`}>
             <Home className="h-6 w-6" />
@@ -44,6 +44,13 @@ export function MobileNav() {
           <a className={`flex flex-col items-center justify-center ${isActive('/expenses') ? 'text-primary' : 'text-muted-foreground'}`}>
             <Receipt className="h-6 w-6" />
             <span className="text-xs mt-1">Expenses</span>
+          </a>
+        </Link>
+        
+        <Link href="/settings">
+          <a className={`flex flex-col items-center justify-center ${isActive('/settings') ? 'text-primary' : 'text-muted-foreground'}`}>
+            <Settings className="h-6 w-6" />
+            <span className="text-xs mt-1">Settings</span>
           </a>
         </Link>
       </div>

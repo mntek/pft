@@ -351,6 +351,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch dashboard data" });
     }
   });
+  
+  // User Profile Update
+  app.patch("/api/user", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Validate incoming data
+      const userUpdateSchema = z.object({
+        username: z.string().min(3).optional(),
+        email: z.string().email().optional(),
+      });
+      
+      const validatedData = userUpdateSchema.parse(req.body);
+      
+      // If username is being updated, check if it's already taken
+      if (validatedData.username) {
+        const existingUser = await storage.getUserByUsername(validatedData.username);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ message: "Username already exists" });
+        }
+      }
+      
+      // Update user
+      const updatedUser = await storage.updateUser(userId, validatedData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return user without password
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update user profile" });
+    }
+  });
+  
+  // Password Update
+  app.post("/api/user/password", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Validate incoming data
+      const passwordUpdateSchema = z.object({
+        currentPassword: z.string().min(1),
+        newPassword: z.string().min(6),
+      });
+      
+      const validatedData = passwordUpdateSchema.parse(req.body);
+      
+      // Get current user
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Verify current password
+      const { comparePasswords, hashPassword } = await import("./auth");
+      const isPasswordValid = await comparePasswords(validatedData.currentPassword, user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+      
+      // Hash new password
+      const hashedPassword = await hashPassword(validatedData.newPassword);
+      
+      // Update password
+      const updatedUser = await storage.updateUser(userId, { password: hashedPassword });
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update password" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

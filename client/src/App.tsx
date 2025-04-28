@@ -14,6 +14,7 @@ import CreditCardsPage from "@/pages/credit-cards-page";
 import AssetsPage from "@/pages/assets-page";
 import IncomePage from "@/pages/income-page";
 import ExpensesPage from "@/pages/expenses-page";
+import SettingsPage from "@/pages/settings-page";
 import { CreditCardForm } from "@/components/credit-cards/credit-card-form";
 import { AssetForm } from "@/components/assets/asset-form";
 import { IncomeForm } from "@/components/income/income-form";
@@ -32,6 +33,7 @@ function Router() {
       <ProtectedRoute path="/income/new" component={() => <IncomeForm />} />
       <ProtectedRoute path="/expenses" component={ExpensesPage} />
       <ProtectedRoute path="/expenses/new" component={() => <ExpenseForm />} />
+      <ProtectedRoute path="/settings" component={SettingsPage} />
       <Route component={NotFound} />
     </Switch>
   );
