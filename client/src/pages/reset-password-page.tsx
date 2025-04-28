@@ -50,7 +50,9 @@ export default function ResetPasswordPage() {
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (values: ResetPasswordFormValues) => {
-      const response = await apiRequest("POST", "/api/user/reset-password", values);
+      // We only need the password and token
+      const { confirmPassword, ...data } = values;
+      const response = await apiRequest("POST", "/api/reset-password", data);
       return response.json();
     },
     onSuccess: () => {
