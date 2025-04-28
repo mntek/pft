@@ -1,0 +1,55 @@
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ThemeProvider } from "next-themes";
+import { ProtectedRoute } from "./lib/protected-route";
+
+import NotFound from "@/pages/not-found";
+import AuthPage from "@/pages/auth-page";
+import DashboardPage from "@/pages/dashboard-page";
+import CreditCardsPage from "@/pages/credit-cards-page";
+import AssetsPage from "@/pages/assets-page";
+import IncomePage from "@/pages/income-page";
+import ExpensesPage from "@/pages/expenses-page";
+import { CreditCardForm } from "@/components/credit-cards/credit-card-form";
+import { AssetForm } from "@/components/assets/asset-form";
+import { IncomeForm } from "@/components/income/income-form";
+import { ExpenseForm } from "@/components/expenses/expense-form";
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/auth" component={AuthPage} />
+      <ProtectedRoute path="/" component={DashboardPage} />
+      <ProtectedRoute path="/credit-cards" component={CreditCardsPage} />
+      <ProtectedRoute path="/credit-cards/new" component={() => <CreditCardForm />} />
+      <ProtectedRoute path="/assets" component={AssetsPage} />
+      <ProtectedRoute path="/assets/new" component={() => <AssetForm />} />
+      <ProtectedRoute path="/income" component={IncomePage} />
+      <ProtectedRoute path="/income/new" component={() => <IncomeForm />} />
+      <ProtectedRoute path="/expenses" component={ExpensesPage} />
+      <ProtectedRoute path="/expenses/new" component={() => <ExpenseForm />} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
