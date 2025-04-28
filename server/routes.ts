@@ -409,15 +409,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
+      // Import password functions
+      const auth = await import("./auth");
+      
       // Verify current password
-      const { comparePasswords, hashPassword } = await import("./auth");
-      const isPasswordValid = await comparePasswords(validatedData.currentPassword, user.password);
+      const isPasswordValid = await auth.comparePasswords(validatedData.currentPassword, user.password);
       if (!isPasswordValid) {
         return res.status(400).json({ message: "Current password is incorrect" });
       }
       
       // Hash new password
-      const hashedPassword = await hashPassword(validatedData.newPassword);
+      const hashedPassword = await auth.hashPassword(validatedData.newPassword);
       
       // Update password
       const updatedUser = await storage.updateUser(userId, { password: hashedPassword });

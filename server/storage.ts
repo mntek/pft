@@ -6,7 +6,7 @@ import type {
   Income, InsertIncome, 
   Expense, InsertExpense 
 } from "@shared/schema";
-import session from "express-session";
+import * as session from "express-session";
 import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
@@ -17,6 +17,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
   
   // Credit card methods
   getCreditCards(userId: number): Promise<CreditCard[]>;
@@ -47,7 +48,7 @@ export interface IStorage {
   deleteExpense(id: number): Promise<boolean>;
   
   // Session store
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Use any for session store to avoid TypeScript errors
 }
 
 export class MemStorage implements IStorage {
@@ -57,7 +58,7 @@ export class MemStorage implements IStorage {
   private incomes: Map<number, Income>;
   private expenses: Map<number, Expense>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Use any for session store to avoid TypeScript errors
   
   // Counters for IDs
   private userIdCounter: number;
@@ -100,6 +101,15 @@ export class MemStorage implements IStorage {
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUser(id: number, updates: Partial<User>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, ...updates };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 
   // Credit card methods
