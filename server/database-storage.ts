@@ -9,7 +9,7 @@ import type {
   Expense, InsertExpense,
   PasswordResetToken, InsertPasswordResetToken
 } from "@shared/schema";
-import * as session from "express-session";
+import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 import { IStorage } from "./storage";

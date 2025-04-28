@@ -7,7 +7,7 @@ import type {
   Expense, InsertExpense,
   PasswordResetToken, InsertPasswordResetToken
 } from "@shared/schema";
-import * as session from "express-session";
+import session from "express-session";
 import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
