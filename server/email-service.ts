@@ -1,10 +1,10 @@
-import * as sendgrid from '@sendgrid/mail';
+import sgMail from '@sendgrid/mail';
 
 // Initialize SendGrid with API key
 if (!process.env.SENDGRID_API_KEY) {
   console.warn('SENDGRID_API_KEY environment variable is not set. Email functionality will not work.');
 } else {
-  sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 }
 
 interface EmailData {
@@ -22,7 +22,7 @@ export async function sendEmail(data: EmailData): Promise<boolean> {
       return false;
     }
     
-    await sendgrid.send(data);
+    await sgMail.send(data);
     return true;
   } catch (error) {
     console.error('Error sending email:', error);
