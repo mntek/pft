@@ -1,10 +1,11 @@
-import { users, creditCards, assets, incomes, expenses } from "@shared/schema";
+import { users, creditCards, assets, incomes, expenses, passwordResetTokens } from "@shared/schema";
 import type { 
   User, InsertUser, 
   CreditCard, InsertCreditCard, 
   Asset, InsertAsset, 
   Income, InsertIncome, 
-  Expense, InsertExpense 
+  Expense, InsertExpense,
+  PasswordResetToken, InsertPasswordResetToken
 } from "@shared/schema";
 import * as session from "express-session";
 import createMemoryStore from "memorystore";
@@ -16,6 +17,7 @@ export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
   
@@ -46,6 +48,11 @@ export interface IStorage {
   createExpense(expense: InsertExpense): Promise<Expense>;
   updateExpense(id: number, expense: Partial<InsertExpense>): Promise<Expense | undefined>;
   deleteExpense(id: number): Promise<boolean>;
+  
+  // Password reset methods
+  createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markPasswordResetTokenAsUsed(id: number): Promise<boolean>;
   
   // Session store
   sessionStore: any; // Use any for session store to avoid TypeScript errors
@@ -234,6 +241,39 @@ export class MemStorage implements IStorage {
 
   async deleteExpense(id: number): Promise<boolean> {
     return this.expenses.delete(id);
+  }
+  
+  // New methods for password reset
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email === email
+    );
+  }
+  
+  // Password reset token methods
+  private passwordResetTokens = new Map<number, PasswordResetToken>();
+  private passwordResetTokenIdCounter = 1;
+  
+  async createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken> {
+    const id = this.passwordResetTokenIdCounter++;
+    const newToken: PasswordResetToken = { ...token, id, createdAt: new Date() };
+    this.passwordResetTokens.set(id, newToken);
+    return newToken;
+  }
+  
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    return Array.from(this.passwordResetTokens.values()).find(
+      (resetToken) => resetToken.token === token && !resetToken.used
+    );
+  }
+  
+  async markPasswordResetTokenAsUsed(id: number): Promise<boolean> {
+    const resetToken = this.passwordResetTokens.get(id);
+    if (!resetToken) return false;
+    
+    const updatedToken = { ...resetToken, used: true };
+    this.passwordResetTokens.set(id, updatedToken);
+    return true;
   }
 }
 

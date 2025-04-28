@@ -1,12 +1,13 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db";
-import { users, creditCards, assets, incomes, expenses } from "@shared/schema";
+import { users, creditCards, assets, incomes, expenses, passwordResetTokens } from "@shared/schema";
 import type { 
   User, InsertUser, 
   CreditCard, InsertCreditCard, 
   Asset, InsertAsset, 
   Income, InsertIncome, 
-  Expense, InsertExpense 
+  Expense, InsertExpense,
+  PasswordResetToken, InsertPasswordResetToken
 } from "@shared/schema";
 import * as session from "express-session";
 import connectPg from "connect-pg-simple";
@@ -169,5 +170,36 @@ export class DatabaseStorage implements IStorage {
   async deleteExpense(id: number): Promise<boolean> {
     const result = await db.delete(expenses).where(eq(expenses.id, id));
     return true; // Always return true as the delete operation succeeded even if no rows were deleted
+  }
+
+  // User methods for password reset
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.email, email));
+    return result.length > 0 ? result[0] : undefined;
+  }
+
+  // Password reset token methods
+  async createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken> {
+    const result = await db.insert(passwordResetTokens).values(token).returning();
+    return result[0];
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const result = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(eq(passwordResetTokens.token, token));
+    
+    return result.length > 0 ? result[0] : undefined;
+  }
+
+  async markPasswordResetTokenAsUsed(id: number): Promise<boolean> {
+    const result = await db
+      .update(passwordResetTokens)
+      .set({ used: true })
+      .where(eq(passwordResetTokens.id, id))
+      .returning();
+    
+    return result.length > 0;
   }
 }
