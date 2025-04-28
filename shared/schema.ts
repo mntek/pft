@@ -1,6 +1,7 @@
 import { pgTable, text, serial, integer, boolean, numeric, date, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { relations } from "drizzle-orm";
 
 // User schema
 export const users = pgTable("users", {
@@ -9,6 +10,8 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull(),
 });
+
+// Relations will be defined after all tables
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -94,3 +97,65 @@ export type InsertIncome = z.infer<typeof insertIncomeSchema>;
 
 export type Expense = typeof expenses.$inferSelect;
 export type InsertExpense = z.infer<typeof insertExpenseSchema>;
+
+// Password reset token schema
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPasswordResetTokenSchema = createInsertSchema(passwordResetTokens).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = z.infer<typeof insertPasswordResetTokenSchema>;
+
+// Define relations after all tables are declared
+export const usersRelations = relations(users, ({ many }) => ({
+  creditCards: many(creditCards),
+  assets: many(assets),
+  incomes: many(incomes),
+  expenses: many(expenses),
+  passwordResetTokens: many(passwordResetTokens),
+}));
+
+export const creditCardsRelations = relations(creditCards, ({ one }) => ({
+  user: one(users, {
+    fields: [creditCards.userId],
+    references: [users.id],
+  }),
+}));
+
+export const assetsRelations = relations(assets, ({ one }) => ({
+  user: one(users, {
+    fields: [assets.userId],
+    references: [users.id],
+  }),
+}));
+
+export const incomesRelations = relations(incomes, ({ one }) => ({
+  user: one(users, {
+    fields: [incomes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const expensesRelations = relations(expenses, ({ one }) => ({
+  user: one(users, {
+    fields: [expenses.userId],
+    references: [users.id],
+  }),
+}));
+
+export const passwordResetTokensRelations = relations(passwordResetTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [passwordResetTokens.userId],
+    references: [users.id],
+  }),
+}));
