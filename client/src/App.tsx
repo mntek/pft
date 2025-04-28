@@ -15,6 +15,8 @@ import AssetsPage from "@/pages/assets-page";
 import IncomePage from "@/pages/income-page";
 import ExpensesPage from "@/pages/expenses-page";
 import SettingsPage from "@/pages/settings-page";
+import ForgotPasswordPage from "@/pages/forgot-password-page";
+import ResetPasswordPage from "@/pages/reset-password-page";
 import { CreditCardForm } from "@/components/credit-cards/credit-card-form";
 import { AssetForm } from "@/components/assets/asset-form";
 import { IncomeForm } from "@/components/income/income-form";
@@ -24,6 +26,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/forgot-password" component={ForgotPasswordPage} />
+      <Route path="/reset-password" component={ResetPasswordPage} />
       <ProtectedRoute path="/" component={DashboardPage} />
       <ProtectedRoute path="/credit-cards" component={CreditCardsPage} />
       <ProtectedRoute path="/credit-cards/new" component={() => <CreditCardForm />} />

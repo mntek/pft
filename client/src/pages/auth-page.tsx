@@ -120,6 +120,12 @@ export default function AuthPage() {
                     >
                       {loginMutation.isPending ? "Signing in..." : "Sign In"}
                     </Button>
+                    
+                    <div className="mt-2 text-center">
+                      <Button variant="link" className="text-sm text-primary" onClick={() => navigate("/forgot-password")}>
+                        Forgot your password?
+                      </Button>
+                    </div>
                   </form>
                 </Form>
               </TabsContent>
