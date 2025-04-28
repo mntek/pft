@@ -1,0 +1,55 @@
+Project Name: Personal Financial Tracker (Mobile-first Web Application)
+
+Objective:
+Create a mobile-friendly personal finance management app where the user can track credit card debts, payments, monthly income, various assets (bank accounts, cash, crypto, gold), and one-time expenses. The system must be easy to use, dark mode by default, and accessible from mobile and desktop via web browser (PWA if possible).
+
+⸻
+
+Core Features:
+
+1. Credit Card Management
+	•	Add multiple credit cards.
+	•	Fields: Card Name, Issuing Bank, Credit Limit, Statement Date, Due Date, Minimum Payment %.
+	•	Record monthly spending and payments.
+	•	Monitor outstanding balance per card.
+	•	Alerts for upcoming due dates or unpaid minimum payments.
+
+2. Monthly Income Tracking
+	•	Input fixed and optional additional income monthly.
+	•	Show monthly income vs total debt in a dashboard widget.
+
+3. Asset Management
+	•	Two types of assets:
+	•	Bank-linked assets: Bank name, asset type (Checking, Savings, Time Deposit, Stocks, etc.), currency (TRY, USD, EUR, etc.), amount.
+	•	Non-bank assets: Type (Cash, Crypto, Physical Gold, etc.), Location (Wallet, Exchange, Safe Deposit), currency, amount.
+
+4. One-Time Expenses
+	•	Enter single-instance expenses like children’s school fees, travel, health expenses, etc.
+	•	Fields: Category, Description, Amount, Date.
+
+5. Dashboard & Reports
+	•	Overall financial health summary:
+	•	Total debt
+	•	Total assets
+	•	Income vs expenses
+	•	Bank-by-bank asset/debt overview
+	•	Visualizations: Pie charts, bar graphs.
+	•	Filters by time period (monthly, quarterly, yearly).
+
+6. General Requirements
+	•	Dark mode as default.
+	•	Responsive (mobile-first design).
+	•	Secure login system (email/password).
+	•	Cloud database (Firebase/Supabase or equivalent).
+	•	PWA capability: Add to home screen like an app.
+
+⸻
+
+Additional Notes:
+	•	Future scalability: Later, modules like recurring expenses, investment portfolio breakdowns, and tax planning can be added.
+	•	Initial focus: Simple, fast, clean UX. No complex financial calculations needed initially.
+	•	Language: Interface in English.
+
+⸻
+
+End of Brief
