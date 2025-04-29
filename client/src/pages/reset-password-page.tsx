@@ -39,6 +39,9 @@ export default function ResetPasswordPage() {
   const params = new URLSearchParams(location.split('?')[1] || '');
   const token = params.get('token') || '';
 
+  // Create a reference to track if form has been initialized with a token
+  const [hasToken, setHasToken] = React.useState(Boolean(token));
+
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
@@ -47,6 +50,14 @@ export default function ResetPasswordPage() {
       token: token,
     },
   });
+  
+  // Update the form's token value when token state changes
+  React.useEffect(() => {
+    if (form.getValues("token") !== token && token) {
+      form.setValue("token", token);
+      setHasToken(true);
+    }
+  }, [token, form]);
 
   const resetPasswordMutation = useMutation({
     mutationFn: async (values: ResetPasswordFormValues) => {
@@ -75,19 +86,51 @@ export default function ResetPasswordPage() {
     resetPasswordMutation.mutate(values);
   }
 
-  if (!token) {
+  // Instead of showing invalid link, allow user to manually enter token
+  const [manualToken, setManualToken] = React.useState("");
+  
+  // If no token in URL and no token manually entered, show token entry form
+  if (!token && !hasToken) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Invalid Reset Link</CardTitle>
+            <CardTitle className="text-2xl font-bold">Enter Reset Token</CardTitle>
             <CardDescription>
-              The password reset link is invalid or has expired.
+              Please enter the reset token from your email.
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Reset Token
+                </label>
+                <Input 
+                  value={manualToken}
+                  onChange={(e) => setManualToken(e.target.value)}
+                  placeholder="Enter your reset token"
+                />
+              </div>
+              <Button 
+                className="w-full"
+                onClick={() => {
+                  if (manualToken.trim()) {
+                    form.setValue("token", manualToken.trim());
+                    setHasToken(true);
+                    setManualToken("");
+                  }
+                }}
+                disabled={!manualToken.trim()}
+              >
+                Continue with Token
+              </Button>
+            </div>
+          </CardContent>
           <CardFooter className="justify-center">
-            <Button variant="default" onClick={() => navigate("/forgot-password")}>
-              Try Again
+            <Button variant="link" onClick={() => navigate("/forgot-password")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Forgot Password
             </Button>
           </CardFooter>
         </Card>
