@@ -1,6 +1,6 @@
 import { eq, and, lt, gte, desc } from "drizzle-orm";
 import { db } from "./db";
-import { users, creditCards, assets, incomes, expenses, passwordResetTokens, notifications } from "@shared/schema";
+import { users, creditCards, assets, incomes, expenses, passwordResetTokens, notifications, exchangeRates } from "@shared/schema";
 import type { 
   User, InsertUser, 
   CreditCard, InsertCreditCard, 
@@ -8,7 +8,8 @@ import type {
   Income, InsertIncome, 
   Expense, InsertExpense,
   PasswordResetToken, InsertPasswordResetToken,
-  Notification, InsertNotification
+  Notification, InsertNotification,
+  ExchangeRate, InsertExchangeRate
 } from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";

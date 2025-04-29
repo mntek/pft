@@ -8,7 +8,8 @@ import {
   insertAssetSchema,
   insertIncomeSchema,
   insertExpenseSchema,
-  insertPasswordResetTokenSchema
+  insertPasswordResetTokenSchema,
+  insertExchangeRateSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { sendPasswordResetEmail } from "./email-service";
@@ -611,6 +612,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  // Exchange Rate Routes
+  app.get("/api/exchange-rates", async (req, res) => {
+    try {
+      const rates = await storage.getExchangeRates();
+      res.json(rates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch exchange rates" });
+    }
+  });
+
+  app.get("/api/exchange-rates/:fromCurrency/:toCurrency", async (req, res) => {
+    try {
+      const { fromCurrency, toCurrency } = req.params;
+      const rate = await storage.getExchangeRate(fromCurrency, toCurrency);
+      
+      if (!rate) {
+        return res.status(404).json({ message: "Exchange rate not found" });
+      }
+      
+      res.json(rate);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch exchange rate" });
+    }
+  });
+
+  app.post("/api/exchange-rates", isAuthenticated, async (req, res) => {
+    try {
+      // Only admin users should be able to create/update exchange rates
+      // For simplicity, we're just checking if the user is authenticated
+      const validatedData = insertExchangeRateSchema.parse(req.body);
+      const rate = await storage.createExchangeRate(validatedData);
+      res.status(201).json(rate);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create exchange rate" });
+    }
+  });
+
+  app.put("/api/exchange-rates/:id", isAuthenticated, async (req, res) => {
+    try {
+      // Only admin users should be able to create/update exchange rates
+      // For simplicity, we're just checking if the user is authenticated
+      const id = parseInt(req.params.id);
+      
+      const validatedData = insertExchangeRateSchema.partial().parse(req.body);
+      const updatedRate = await storage.updateExchangeRate(id, validatedData);
+      
+      if (!updatedRate) {
+        return res.status(404).json({ message: "Exchange rate not found" });
+      }
+      
+      res.json(updatedRate);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update exchange rate" });
     }
   });
 
