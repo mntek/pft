@@ -1,12 +1,7 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/hooks/use-auth";
-import { ThemeProvider } from "next-themes";
 import { ProtectedRoute } from "./lib/protected-route";
-import { ExchangeRatesProvider } from "@/providers/exchange-rates-provider";
+import { Providers } from "@/providers/providers";
 
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
@@ -46,18 +41,11 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-        <AuthProvider>
-          <ExchangeRatesProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-            </TooltipProvider>
-          </ExchangeRatesProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <Providers>
+      <TooltipProvider>
+        <Router />
+      </TooltipProvider>
+    </Providers>
   );
 }
 

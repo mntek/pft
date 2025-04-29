@@ -139,6 +139,13 @@ async function updateDatabaseRates(rates: Record<string, number>): Promise<void>
   }
   
   console.log('Exchange rates updated successfully');
+  
+  // Send real-time updates via WebSocket
+  notifyExchangeRateUpdate({
+    updated: now,
+    count: Object.keys(rates).length,
+    message: 'Exchange rates have been updated'
+  });
 }
 
 /**
