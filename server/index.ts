@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupExchangeRatesTable } from "./setup-exchange-rates";
+import { addDefaultCurrencyColumn } from "./add-default-currency";
+import { scheduleRateUpdates } from "./exchange-rate-service";
 
 const app = express();
 app.use(express.json());
@@ -38,6 +40,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Add default_currency column to users table
+  await addDefaultCurrencyColumn();
+  
   // Setup exchange rates table
   await setupExchangeRatesTable();
   
@@ -70,5 +75,8 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Schedule exchange rate updates every 4 hours
+    scheduleRateUpdates(4);
   });
 })();
