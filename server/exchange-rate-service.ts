@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import { db } from './db';
 import { exchangeRates } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 // API settings
 // We'll support multiple API providers with fallbacks
@@ -13,11 +13,11 @@ interface ExchangeRateApiConfig {
   parseResponse: (data: any) => Record<string, number>;
 }
 
-// European Central Bank API (no API key required, free)
-const ecbApi: ExchangeRateApiConfig = {
-  name: 'European Central Bank',
-  baseUrl: 'https://api.exchangerate.host',
-  getRatesUrl: () => `https://api.exchangerate.host/latest?base=USD`,
+// Exchange Rates API (no API key required, free)
+const exchangeRatesApi: ExchangeRateApiConfig = {
+  name: 'Exchange Rates API',
+  baseUrl: 'https://api.exchangerate-api.com',
+  getRatesUrl: () => `https://api.exchangerate-api.com/v4/latest/USD`,
   parseResponse: (data: any) => data.rates
 };
 
@@ -33,7 +33,7 @@ const openExchangeRatesApi: ExchangeRateApiConfig = {
 
 // List of APIs to try in order
 const apiProviders: ExchangeRateApiConfig[] = [
-  ecbApi,
+  exchangeRatesApi,
   openExchangeRatesApi
 ];
 
@@ -49,7 +49,7 @@ export async function fetchLatestRates(): Promise<boolean> {
       console.log(`Trying to fetch rates from ${api.name}...`);
       
       // Skip if API requires key and we don't have one
-      if (api.apiKey === undefined && api.name !== 'European Central Bank') {
+      if (api.apiKey === undefined && api.name !== 'Exchange Rates API') {
         console.log(`Skipping ${api.name}: No API key provided`);
         continue;
       }
@@ -103,10 +103,10 @@ async function updateDatabaseRates(rates: Record<string, number>): Promise<void>
       const existingRate = await db.select()
         .from(exchangeRates)
         .where(
-          eq(exchangeRates.fromCurrency, 'USD')
-        )
-        .where(
-          eq(exchangeRates.toCurrency, currency)
+          and(
+            eq(exchangeRates.fromCurrency, 'USD'),
+            eq(exchangeRates.toCurrency, currency)
+          )
         );
       
       if (existingRate && existingRate.length > 0) {
@@ -117,10 +117,10 @@ async function updateDatabaseRates(rates: Record<string, number>): Promise<void>
             lastUpdated: now
           })
           .where(
-            eq(exchangeRates.fromCurrency, 'USD')
-          )
-          .where(
-            eq(exchangeRates.toCurrency, currency)
+            and(
+              eq(exchangeRates.fromCurrency, 'USD'),
+              eq(exchangeRates.toCurrency, currency)
+            )
           );
       } else {
         // Insert new rate
