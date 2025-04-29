@@ -172,17 +172,20 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   
   // Connect on mount if autoConnect is true
   useEffect(() => {
-    if (autoConnect) {
+    let mounted = true;
+    
+    if (autoConnect && mounted) {
       connect();
     }
     
     // Cleanup function
     return () => {
+      mounted = false;
       if (socketRef.current) {
         socketRef.current.close();
       }
     };
-  }, [connect, autoConnect]);
+  }, [autoConnect]); // Remove connect from dependencies to prevent reconnection loops
   
   return {
     isConnected,

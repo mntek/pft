@@ -14,7 +14,7 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="dark" storageKey="finance-tracker-theme">
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
         <AuthProvider>
           <ExchangeRatesProvider>
             <WebSocketProvider>

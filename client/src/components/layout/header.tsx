@@ -1,4 +1,5 @@
 import { Bell, ChevronDown, LogOut, Settings } from "lucide-react";
+import { RealTimeStatus } from "@/components/ui/real-time-status";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +52,7 @@ export function Header() {
         </Link>
       </div>
       <div className="flex items-center gap-2">
+        <RealTimeStatus className="hidden md:flex mr-2" />
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" className="relative">
