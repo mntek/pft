@@ -319,7 +319,10 @@ export class MemStorage implements IStorage {
     const newNotification: Notification = {
       ...notification,
       id,
-      createdAt: new Date()
+      createdAt: new Date(),
+      relatedTo: notification.relatedTo ?? null,
+      relatedId: notification.relatedId ?? null,
+      isRead: notification.isRead ?? false
     };
     this.notifications.set(id, newNotification);
     return newNotification;

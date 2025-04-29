@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Check, CreditCard, Info, Trash2, WarningCircle } from "lucide-react";
+import { Bell, Check, CreditCard, Info, Trash2, AlertCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -27,9 +27,9 @@ function NotificationCard({ notification, onMarkAsRead, onDelete }: Notification
   const getIcon = () => {
     switch (notification.type) {
       case "warning":
-        return <WarningCircle className="h-5 w-5 text-amber-500" />;
+        return <AlertCircle className="h-5 w-5 text-amber-500" />;
       case "error":
-        return <WarningCircle className="h-5 w-5 text-destructive" />;
+        return <AlertCircle className="h-5 w-5 text-destructive" />;
       case "success":
         return <Check className="h-5 w-5 text-emerald-500" />;
       default:
@@ -216,7 +216,7 @@ export function NotificationList() {
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center p-8 text-center">
-        <WarningCircle className="h-10 w-10 text-destructive mb-4" />
+        <AlertCircle className="h-10 w-10 text-destructive mb-4" />
         <h3 className="font-semibold text-lg">Failed to Load Notifications</h3>
         <p className="text-muted-foreground mt-1">
           There was an error loading your notifications.
@@ -279,7 +279,7 @@ export function NotificationList() {
       </div>
       
       <div className="border rounded-md overflow-hidden">
-        {notifications.map((notification) => (
+        {notifications.map((notification: any) => (
           <NotificationCard
             key={notification.id}
             notification={notification}

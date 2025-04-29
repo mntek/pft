@@ -1,64 +1,118 @@
-import React from "react";
-import { useLocation, Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { 
-  Home, 
   CreditCard, 
-  Wallet, 
+  BarChart3, 
   DollarSign, 
-  Receipt, 
-  Settings
+  Wallet, 
+  Coins,
+  Menu
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+
+interface NavItemProps {
+  icon: React.ReactNode;
+  label: string;
+  href: string;
+  isActive: boolean;
+  count?: number;
+}
+
+function NavItem({ icon, label, href, isActive, count }: NavItemProps) {
+  return (
+    <Link href={href}>
+      <Button
+        variant={isActive ? "secondary" : "ghost"}
+        className={cn(
+          "w-full justify-start gap-2", 
+          isActive && "font-semibold"
+        )}
+      >
+        {icon}
+        <span>{label}</span>
+        {count !== undefined && count > 0 && (
+          <span className="ml-auto inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+            {count}
+          </span>
+        )}
+      </Button>
+    </Link>
+  );
+}
 
 export function Sidebar() {
   const [location] = useLocation();
-
-  const isActive = (path: string) => {
-    return location === path;
-  };
-
+  const isMobile = useIsMobile();
+  
   const navItems = [
-    { label: "Dashboard", icon: Home, path: "/" },
-    { label: "Credit Cards", icon: CreditCard, path: "/credit-cards" },
-    { label: "Assets", icon: Wallet, path: "/assets" },
-    { label: "Income", icon: DollarSign, path: "/income" },
-    { label: "Expenses", icon: Receipt, path: "/expenses" },
+    {
+      icon: <BarChart3 className="h-5 w-5" />,
+      label: "Dashboard",
+      href: "/",
+    },
+    {
+      icon: <CreditCard className="h-5 w-5" />,
+      label: "Credit Cards",
+      href: "/credit-cards",
+    },
+    {
+      icon: <Wallet className="h-5 w-5" />,
+      label: "Assets",
+      href: "/assets",
+    },
+    {
+      icon: <DollarSign className="h-5 w-5" />,
+      label: "Income",
+      href: "/income",
+    },
+    {
+      icon: <Coins className="h-5 w-5" />,
+      label: "Expenses",
+      href: "/expenses",
+    }
   ];
-
-  return (
-    <div className="w-64 h-full border-r border-border bg-background">
-      <div className="h-full py-6 px-3 flex flex-col">
-        <div className="space-y-1">
-          {navItems.map((item) => (
-            <Link key={item.path} href={item.path}>
-              <a
-                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
-                  isActive(item.path)
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                <item.icon className="mr-3 h-5 w-5" />
-                {item.label}
-              </a>
-            </Link>
-          ))}
-        </div>
-
-        <div className="mt-auto">
-          <Link href="/settings">
-            <a
-              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${
-                isActive("/settings")
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <Settings className="mr-3 h-5 w-5" />
-              Settings
-            </a>
-          </Link>
-        </div>
+  
+  const sidebarContent = (
+    <div className="flex h-full flex-col gap-4 py-4">
+      <div className="px-4 font-semibold text-lg md:hidden">
+        FinTrack
       </div>
+      <nav className="flex flex-col gap-1 px-2">
+        {navItems.map((item) => (
+          <NavItem
+            key={item.href}
+            icon={item.icon}
+            label={item.label}
+            href={item.href}
+            isActive={location === item.href}
+            count={item.count}
+          />
+        ))}
+      </nav>
+    </div>
+  );
+  
+  if (isMobile) {
+    return (
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="md:hidden absolute top-4 left-4 z-50">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle menu</span>
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0">
+          {sidebarContent}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+  
+  return (
+    <div className="h-full w-64 border-r bg-background hidden md:block">
+      {sidebarContent}
     </div>
   );
 }
