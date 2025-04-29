@@ -1,4 +1,4 @@
-import { users, creditCards, assets, incomes, expenses, passwordResetTokens, notifications } from "@shared/schema";
+import { users, creditCards, assets, incomes, expenses, passwordResetTokens, notifications, exchangeRates } from "@shared/schema";
 import type { 
   User, InsertUser, 
   CreditCard, InsertCreditCard, 
@@ -6,7 +6,8 @@ import type {
   Income, InsertIncome, 
   Expense, InsertExpense,
   PasswordResetToken, InsertPasswordResetToken,
-  Notification, InsertNotification
+  Notification, InsertNotification,
+  ExchangeRate, InsertExchangeRate
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -100,16 +101,55 @@ export class MemStorage implements IStorage {
     this.assets = new Map();
     this.incomes = new Map();
     this.expenses = new Map();
+    this.exchangeRates = new Map();
     
     this.userIdCounter = 1;
     this.creditCardIdCounter = 1;
     this.assetIdCounter = 1;
     this.incomeIdCounter = 1;
     this.expenseIdCounter = 1;
+    this.exchangeRateIdCounter = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // 24 hours
     });
+    
+    // Initialize with default exchange rates
+    this.initializeExchangeRates();
+  }
+  
+  // Helper to initialize exchange rates
+  private async initializeExchangeRates() {
+    const defaultRates = [
+      { fromCurrency: 'USD', toCurrency: 'EUR', rate: '0.91' },
+      { fromCurrency: 'USD', toCurrency: 'GBP', rate: '0.78' },
+      { fromCurrency: 'USD', toCurrency: 'JPY', rate: '151.82' },
+      { fromCurrency: 'USD', toCurrency: 'CAD', rate: '1.36' },
+      { fromCurrency: 'USD', toCurrency: 'AUD', rate: '1.52' },
+      { fromCurrency: 'USD', toCurrency: 'CHF', rate: '0.90' },
+      { fromCurrency: 'USD', toCurrency: 'CNY', rate: '7.24' },
+      { fromCurrency: 'USD', toCurrency: 'HKD', rate: '7.82' },
+      { fromCurrency: 'USD', toCurrency: 'SGD', rate: '1.35' },
+      // Also add reverse rates
+      { fromCurrency: 'EUR', toCurrency: 'USD', rate: '1.1' },
+      { fromCurrency: 'GBP', toCurrency: 'USD', rate: '1.28' },
+      { fromCurrency: 'JPY', toCurrency: 'USD', rate: '0.0066' },
+      { fromCurrency: 'CAD', toCurrency: 'USD', rate: '0.73' },
+      { fromCurrency: 'AUD', toCurrency: 'USD', rate: '0.66' },
+      { fromCurrency: 'CHF', toCurrency: 'USD', rate: '1.11' },
+      { fromCurrency: 'CNY', toCurrency: 'USD', rate: '0.14' },
+      { fromCurrency: 'HKD', toCurrency: 'USD', rate: '0.13' },
+      { fromCurrency: 'SGD', toCurrency: 'USD', rate: '0.74' },
+    ];
+    
+    for (const rate of defaultRates) {
+      await this.createExchangeRate({
+        fromCurrency: rate.fromCurrency,
+        toCurrency: rate.toCurrency,
+        rate: rate.rate,
+        lastUpdated: new Date()
+      });
+    }
   }
 
   // User methods
@@ -125,7 +165,11 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      defaultCurrency: insertUser.defaultCurrency || 'USD'
+    };
     this.users.set(id, user);
     return user;
   }
@@ -152,7 +196,11 @@ export class MemStorage implements IStorage {
 
   async createCreditCard(card: InsertCreditCard): Promise<CreditCard> {
     const id = this.creditCardIdCounter++;
-    const newCard: CreditCard = { ...card, id };
+    const newCard: CreditCard = { 
+      ...card, 
+      id,
+      currency: card.currency || 'USD'
+    };
     this.creditCards.set(id, newCard);
     return newCard;
   }
@@ -219,7 +267,11 @@ export class MemStorage implements IStorage {
 
   async createIncome(income: InsertIncome): Promise<Income> {
     const id = this.incomeIdCounter++;
-    const newIncome: Income = { ...income, id };
+    const newIncome: Income = { 
+      ...income, 
+      id,
+      currency: income.currency || 'USD'
+    };
     this.incomes.set(id, newIncome);
     return newIncome;
   }
@@ -250,7 +302,11 @@ export class MemStorage implements IStorage {
 
   async createExpense(expense: InsertExpense): Promise<Expense> {
     const id = this.expenseIdCounter++;
-    const newExpense: Expense = { ...expense, id };
+    const newExpense: Expense = { 
+      ...expense, 
+      id,
+      currency: expense.currency || 'USD'
+    };
     this.expenses.set(id, newExpense);
     return newExpense;
   }
@@ -358,6 +414,41 @@ export class MemStorage implements IStorage {
 
   async deleteNotification(id: number): Promise<boolean> {
     return this.notifications.delete(id);
+  }
+
+  // Exchange rate methods
+  async getExchangeRates(): Promise<ExchangeRate[]> {
+    return Array.from(this.exchangeRates.values());
+  }
+
+  async getExchangeRate(fromCurrency: string, toCurrency: string): Promise<ExchangeRate | undefined> {
+    return Array.from(this.exchangeRates.values()).find(
+      rate => rate.fromCurrency === fromCurrency && rate.toCurrency === toCurrency
+    );
+  }
+
+  async updateExchangeRate(id: number, updates: Partial<InsertExchangeRate>): Promise<ExchangeRate | undefined> {
+    const rate = this.exchangeRates.get(id);
+    if (!rate) return undefined;
+    
+    const updatedRate: ExchangeRate = { 
+      ...rate, 
+      ...updates,
+      lastUpdated: new Date() 
+    };
+    this.exchangeRates.set(id, updatedRate);
+    return updatedRate;
+  }
+
+  async createExchangeRate(rate: InsertExchangeRate): Promise<ExchangeRate> {
+    const id = this.exchangeRateIdCounter++;
+    const newRate: ExchangeRate = { 
+      ...rate, 
+      id,
+      lastUpdated: rate.lastUpdated || new Date()
+    };
+    this.exchangeRates.set(id, newRate);
+    return newRate;
   }
 
   async generateCreditCardDueNotifications(userId: number): Promise<Notification[]> {
