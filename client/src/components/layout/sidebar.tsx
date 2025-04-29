@@ -5,7 +5,8 @@ import {
   DollarSign, 
   Wallet, 
   Coins,
-  Menu
+  Menu,
+  Wifi
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -78,6 +79,11 @@ export function Sidebar() {
       icon: <Coins className="h-5 w-5" />,
       label: "Expenses",
       href: "/expenses",
+    },
+    {
+      icon: <Wifi className="h-5 w-5" />,
+      label: "Real-Time",
+      href: "/real-time",
     }
   ];
   
