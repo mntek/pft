@@ -1,4 +1,5 @@
 import { useExchangeRatesContext } from '@/providers/exchange-rates-provider';
+import type { ExchangeRate } from '@shared/schema';
 
 export type CurrencyOption = {
   value: string;
@@ -73,7 +74,7 @@ export function convertCurrency(
   
   // Find relevant exchange rate
   const rate = rates.find(
-    (r: any) => r.fromCurrency === fromCurrency && r.toCurrency === toCurrency
+    (r: ExchangeRate) => r.fromCurrency === fromCurrency && r.toCurrency === toCurrency
   );
   
   // If direct rate exists, use it
@@ -83,7 +84,7 @@ export function convertCurrency(
   
   // Look for inverse rate
   const inverseRate = rates.find(
-    (r: any) => r.fromCurrency === toCurrency && r.toCurrency === fromCurrency
+    (r: ExchangeRate) => r.fromCurrency === toCurrency && r.toCurrency === fromCurrency
   );
   
   // If inverse rate exists, convert using it
@@ -94,11 +95,11 @@ export function convertCurrency(
   // If no direct or inverse rate, try through USD (assuming USD is base currency)
   if (fromCurrency !== 'USD' && toCurrency !== 'USD') {
     const toUsdRate = rates.find(
-      (r: any) => r.fromCurrency === fromCurrency && r.toCurrency === 'USD'
+      (r: ExchangeRate) => r.fromCurrency === fromCurrency && r.toCurrency === 'USD'
     );
     
     const fromUsdRate = rates.find(
-      (r: any) => r.fromCurrency === 'USD' && r.toCurrency === toCurrency
+      (r: ExchangeRate) => r.fromCurrency === 'USD' && r.toCurrency === toCurrency
     );
     
     if (toUsdRate && fromUsdRate) {

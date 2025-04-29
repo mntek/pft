@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ExchangeRate } from '@shared/schema';
+import type { ExchangeRate } from '@shared/schema';
 import { CURRENCIES } from '@/lib/currency';
 
 /**
@@ -25,7 +25,7 @@ export function useExchangeRates() {
     
     // Direct rate
     const directRate = rates.find(
-      r => r.fromCurrency === fromCurrency && r.toCurrency === toCurrency
+      (r: ExchangeRate) => r.fromCurrency === fromCurrency && r.toCurrency === toCurrency
     );
     
     if (directRate) {
@@ -34,7 +34,7 @@ export function useExchangeRates() {
     
     // Inverse rate
     const inverseRate = rates.find(
-      r => r.fromCurrency === toCurrency && r.toCurrency === fromCurrency
+      (r: ExchangeRate) => r.fromCurrency === toCurrency && r.toCurrency === fromCurrency
     );
     
     if (inverseRate) {
