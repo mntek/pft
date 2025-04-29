@@ -1,6 +1,5 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { PlusCircle, Loader2, DollarSign } from "lucide-react";
@@ -21,37 +20,43 @@ export default function IncomePage() {
 
   if (isLoading) {
     return (
-      <MainLayout title="Income Tracking">
+      <>
+        <h1 className="text-2xl font-bold mb-6">Income Tracking</h1>
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </MainLayout>
+      </>
     );
   }
 
   if (error) {
     return (
-      <MainLayout title="Income Tracking">
+      <>
+        <h1 className="text-2xl font-bold mb-6">Income Tracking</h1>
         <div className="text-center py-10">
           <p className="text-destructive">Failed to load income data. Please try again later.</p>
         </div>
-      </MainLayout>
+      </>
     );
   }
 
+  // Get safe value for incomes and cast to array
+  const safeIncomes = incomes as any[] || [];
+  
   // Calculate total fixed and additional income
-  const fixedIncome = incomes
+  const fixedIncome = safeIncomes
     .filter(income => income.type === 'fixed')
     .reduce((sum, income) => sum + Number(income.amount), 0);
   
-  const additionalIncome = incomes
+  const additionalIncome = safeIncomes
     .filter(income => income.type === 'additional')
     .reduce((sum, income) => sum + Number(income.amount), 0);
   
   const totalIncome = fixedIncome + additionalIncome;
 
   return (
-    <MainLayout title="Income Tracking">
+    <>
+      <h1 className="text-2xl font-bold mb-6">Income Tracking</h1>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
@@ -100,7 +105,7 @@ export default function IncomePage() {
         </div>
 
         {/* Income History */}
-        {incomes.length === 0 ? (
+        {safeIncomes.length === 0 ? (
           <Card className="p-6">
             <div className="text-center py-12">
               <DollarSign className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -117,9 +122,9 @@ export default function IncomePage() {
             </div>
           </Card>
         ) : (
-          <IncomeList incomes={incomes} />
+          <IncomeList incomes={safeIncomes} />
         )}
       </div>
-    </MainLayout>
+    </>
   );
 }

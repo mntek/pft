@@ -1,6 +1,5 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { PlusCircle, Loader2, Wallet } from "lucide-react";
@@ -18,29 +17,33 @@ export default function AssetsPage() {
 
   if (isLoading) {
     return (
-      <MainLayout title="Asset Management">
+      <>
+        <h1 className="text-2xl font-bold mb-6">Asset Management</h1>
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </MainLayout>
+      </>
     );
   }
 
   if (error) {
     return (
-      <MainLayout title="Asset Management">
+      <>
+        <h1 className="text-2xl font-bold mb-6">Asset Management</h1>
         <div className="text-center py-10">
           <p className="text-destructive">Failed to load assets. Please try again later.</p>
         </div>
-      </MainLayout>
+      </>
     );
   }
 
-  const bankAssets = assets.filter(asset => asset.type === 'bank');
-  const nonBankAssets = assets.filter(asset => asset.type === 'non-bank');
+  const safeAssets = assets as any[] || [];
+  const bankAssets = safeAssets.filter(asset => asset.type === 'bank');
+  const nonBankAssets = safeAssets.filter(asset => asset.type === 'non-bank');
 
   return (
-    <MainLayout title="Asset Management">
+    <>
+      <h1 className="text-2xl font-bold mb-6">Asset Management</h1>
       <div className="space-y-6">
         <div className="flex justify-end">
           <Button
@@ -102,6 +105,6 @@ export default function AssetsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </MainLayout>
+    </>
   );
 }
