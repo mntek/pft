@@ -48,18 +48,24 @@ export function CurrencySelect({ name, label, disabled = false }: CurrencySelect
                 ) : (
                   <>
                     <div className="mb-2 px-2 text-xs text-muted-foreground">Common Currencies</div>
-                    {topCurrencies.map((code: string) => (
-                      <SelectItem key={code} value={code}>
-                        {code} - {getCurrencyName(code)}
-                      </SelectItem>
-                    ))}
+                    {topCurrencies.map((code) => {
+                      const currency = CURRENCIES.find(c => c.value === code);
+                      return (
+                        <SelectItem key={code} value={code}>
+                          {code} - {currency ? currency.label : code}
+                        </SelectItem>
+                      );
+                    })}
                     
                     <div className="my-2 px-2 text-xs text-muted-foreground">All Currencies</div>
-                    {otherCurrencies.map((code: string) => (
-                      <SelectItem key={code} value={code}>
-                        {code} - {getCurrencyName(code)}
-                      </SelectItem>
-                    ))}
+                    {otherCurrencies.map((code) => {
+                      const currency = CURRENCIES.find(c => c.value === code);
+                      return (
+                        <SelectItem key={code} value={code}>
+                          {code} - {currency ? currency.label : code}
+                        </SelectItem>
+                      );
+                    })}
                   </>
                 )}
               </SelectContent>
@@ -72,29 +78,3 @@ export function CurrencySelect({ name, label, disabled = false }: CurrencySelect
   );
 }
 
-// Function to get currency names
-function getCurrencyName(code: string): string {
-  const currencyNames: Record<string, string> = {
-    USD: "US Dollar",
-    EUR: "Euro",
-    JPY: "Japanese Yen",
-    GBP: "British Pound",
-    AUD: "Australian Dollar",
-    CAD: "Canadian Dollar",
-    CHF: "Swiss Franc",
-    CNY: "Chinese Yuan",
-    INR: "Indian Rupee",
-    BRL: "Brazilian Real",
-    RUB: "Russian Ruble",
-    KRW: "South Korean Won",
-    SGD: "Singapore Dollar",
-    NZD: "New Zealand Dollar",
-    MXN: "Mexican Peso",
-    HKD: "Hong Kong Dollar",
-    SEK: "Swedish Krona",
-    NOK: "Norwegian Krone",
-    // Add more as needed
-  };
-
-  return currencyNames[code] || code;
-}

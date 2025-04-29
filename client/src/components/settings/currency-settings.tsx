@@ -72,12 +72,6 @@ export function CurrencySettings() {
     mutate(values);
   }
 
-  // Function to get currency names
-  function getCurrencyName(code: string): string {
-    const currency = CURRENCIES.find(c => c.value === code);
-    return currency ? currency.label : code;
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -106,18 +100,24 @@ export function CurrencySettings() {
                       </SelectTrigger>
                       <SelectContent>
                         <div className="mb-2 px-2 text-xs text-muted-foreground">Common Currencies</div>
-                        {topCurrencies.map((code: string) => (
-                          <SelectItem key={code} value={code}>
-                            {code} - {getCurrencyName(code)}
-                          </SelectItem>
-                        ))}
+                        {topCurrencies.map((code) => {
+                          const currency = CURRENCIES.find(c => c.value === code);
+                          return (
+                            <SelectItem key={code} value={code}>
+                              {code} - {currency ? currency.label : code}
+                            </SelectItem>
+                          );
+                        })}
                         
                         <div className="my-2 px-2 text-xs text-muted-foreground">All Currencies</div>
-                        {otherCurrencies.map((code: string) => (
-                          <SelectItem key={code} value={code}>
-                            {code} - {getCurrencyName(code)}
-                          </SelectItem>
-                        ))}
+                        {otherCurrencies.map((code) => {
+                          const currency = CURRENCIES.find(c => c.value === code);
+                          return (
+                            <SelectItem key={code} value={code}>
+                              {code} - {currency ? currency.label : code}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </FormControl>
