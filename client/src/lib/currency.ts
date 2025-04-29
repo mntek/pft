@@ -12,9 +12,9 @@ export const currencies = [
   { code: 'SGD', name: 'Singapore Dollar', symbol: 'S$' }
 ];
 
-// Hard-coded exchange rates (in a real app, these would be fetched from an API)
+// Default exchange rates - these will be used as fallback if API fails
 // All rates are relative to USD (1 USD = X units of currency)
-export const exchangeRates: Record<string, number> = {
+export const defaultExchangeRates: Record<string, number> = {
   'USD': 1.0,
   'EUR': 0.91,
   'GBP': 0.78,
@@ -25,6 +25,39 @@ export const exchangeRates: Record<string, number> = {
   'CNY': 7.24,
   'HKD': 7.82,
   'SGD': 1.35
+};
+
+// Initialize with default rates, will be updated from API
+export let exchangeRates: Record<string, number> = { ...defaultExchangeRates };
+
+// Function to fetch exchange rates from API
+export async function fetchExchangeRates(): Promise<Record<string, number>> {
+  try {
+    const response = await fetch('/api/exchange-rates');
+    if (!response.ok) {
+      throw new Error('Failed to fetch exchange rates');
+    }
+    
+    const data = await response.json();
+    const rates: Record<string, number> = {};
+    
+    // Process rates from API
+    data.forEach((rate: any) => {
+      if (rate.fromCurrency === 'USD') {
+        rates[rate.toCurrency] = parseFloat(rate.rate);
+      }
+    });
+    
+    // Always ensure USD is 1.0
+    rates['USD'] = 1.0;
+    
+    // Update the exchange rates
+    exchangeRates = { ...defaultExchangeRates, ...rates };
+    return exchangeRates;
+  } catch (error) {
+    console.error('Error fetching exchange rates:', error);
+    return defaultExchangeRates;
+  }
 };
 
 /**

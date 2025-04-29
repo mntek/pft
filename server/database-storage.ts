@@ -40,7 +40,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(insertUser).returning();
+    // Set default currency if not provided
+    const userData = {
+      ...insertUser,
+      defaultCurrency: insertUser.defaultCurrency || 'USD'
+    };
+    const result = await db.insert(users).values(userData).returning();
     return result[0];
   }
 
@@ -65,7 +70,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCreditCard(card: InsertCreditCard): Promise<CreditCard> {
-    const result = await db.insert(creditCards).values(card).returning();
+    // Set default currency if not provided
+    const cardData = {
+      ...card,
+      currency: card.currency || 'USD'
+    };
+    const result = await db.insert(creditCards).values(cardData).returning();
     return result[0];
   }
 
@@ -95,7 +105,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAsset(asset: InsertAsset): Promise<Asset> {
-    const result = await db.insert(assets).values(asset).returning();
+    // Set default currency if not provided
+    const assetData = {
+      ...asset,
+      currency: asset.currency || 'USD'
+    };
+    const result = await db.insert(assets).values(assetData).returning();
     return result[0];
   }
 
@@ -125,7 +140,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createIncome(income: InsertIncome): Promise<Income> {
-    const result = await db.insert(incomes).values(income).returning();
+    // Set default currency if not provided
+    const incomeData = {
+      ...income,
+      currency: income.currency || 'USD'
+    };
+    const result = await db.insert(incomes).values(incomeData).returning();
     return result[0];
   }
 
@@ -155,7 +175,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createExpense(expense: InsertExpense): Promise<Expense> {
-    const result = await db.insert(expenses).values(expense).returning();
+    // Set default currency if not provided
+    const expenseData = {
+      ...expense,
+      currency: expense.currency || 'USD'
+    };
+    const result = await db.insert(expenses).values(expenseData).returning();
     return result[0];
   }
 
@@ -318,5 +343,47 @@ export class DatabaseStorage implements IStorage {
     }
     
     return createdNotifications;
+  }
+
+  // Exchange rate methods
+  async getExchangeRates(): Promise<ExchangeRate[]> {
+    return await db.select().from(exchangeRates);
+  }
+
+  async getExchangeRate(fromCurrency: string, toCurrency: string): Promise<ExchangeRate | undefined> {
+    const result = await db
+      .select()
+      .from(exchangeRates)
+      .where(and(
+        eq(exchangeRates.fromCurrency, fromCurrency),
+        eq(exchangeRates.toCurrency, toCurrency)
+      ));
+    
+    return result.length > 0 ? result[0] : undefined;
+  }
+
+  async updateExchangeRate(id: number, updates: Partial<InsertExchangeRate>): Promise<ExchangeRate | undefined> {
+    // Ensure lastUpdated is set to current time
+    if (!updates.lastUpdated) {
+      updates.lastUpdated = new Date();
+    }
+    
+    const result = await db
+      .update(exchangeRates)
+      .set(updates)
+      .where(eq(exchangeRates.id, id))
+      .returning();
+    
+    return result.length > 0 ? result[0] : undefined;
+  }
+
+  async createExchangeRate(rate: InsertExchangeRate): Promise<ExchangeRate> {
+    // Ensure lastUpdated is set to current time if not provided
+    if (!rate.lastUpdated) {
+      rate.lastUpdated = new Date();
+    }
+    
+    const result = await db.insert(exchangeRates).values(rate).returning();
+    return result[0];
   }
 }
