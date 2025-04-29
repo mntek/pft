@@ -2,6 +2,7 @@ import fetch from 'node-fetch';
 import { db } from './db';
 import { exchangeRates } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
+import { notifyExchangeRateUpdate } from './websocket-service';
 
 // API settings
 // We'll support multiple API providers with fallbacks

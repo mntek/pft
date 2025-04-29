@@ -14,6 +14,7 @@ import {
 import { z } from "zod";
 import { sendPasswordResetEmail } from "./email-service";
 import { fetchLatestRates } from "./exchange-rate-service";
+import { initializeWebSocketServer } from "./websocket-service";
 
 // Middleware to ensure user is authenticated
 const isAuthenticated = (req: Request, res: Response, next: Function) => {
@@ -367,15 +368,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete notification" });
     }
   });
-
-  // Generate credit card due notifications
+  
+  // Generate credit card due notifications and send via WebSocket
   app.post("/api/notifications/generate-due-notifications", isAuthenticated, async (req, res) => {
     try {
       const userId = req.user!.id;
-      const notifications = await storage.generateCreditCardDueNotifications(userId);
-      res.json(notifications);
+      const newNotifications = await storage.generateCreditCardDueNotifications(userId);
+      
+      // Send each notification via WebSocket
+      const { notifyNewNotification } = await import("./websocket-service");
+      for (const notification of newNotifications) {
+        notifyNewNotification(userId, notification);
+      }
+      
+      res.json({ success: true, count: newNotifications.length, notifications: newNotifications });
     } catch (error) {
-      res.status(500).json({ message: "Failed to generate due notifications" });
+      res.status(500).json({ message: "Failed to generate notifications" });
     }
   });
 
@@ -697,5 +705,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Initialize WebSocket server
+  const wss = initializeWebSocketServer(httpServer);
+  
   return httpServer;
 }
