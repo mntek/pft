@@ -1,11 +1,11 @@
-import { MainLayout } from "@/components/layout/main-layout";
 import { RealTimeDemo } from "@/components/real-time/real-time-demo";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 
 export default function RealTimePage() {
   return (
-    <MainLayout title="Real-Time Updates">
+    <div className="p-4 md:p-6">
+      <h1 className="text-2xl font-bold mb-6">Real-Time Updates</h1>
       <div className="space-y-6">
         <Alert>
           <InfoIcon className="h-4 w-4" />
@@ -20,6 +20,6 @@ export default function RealTimePage() {
           <RealTimeDemo />
         </div>
       </div>
-    </MainLayout>
+    </div>
   );
 }
