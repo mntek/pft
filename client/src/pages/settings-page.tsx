@@ -22,6 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
+import { CurrencySettings } from "@/components/settings/currency-settings";
 
 // Schema for profile update form
 const profileSchema = z.object({
@@ -277,49 +278,55 @@ export default function SettingsPage() {
           
           {/* Preferences Settings */}
           <TabsContent value="preferences">
-            <Card>
-              <CardHeader>
-                <CardTitle>Preferences</CardTitle>
-                <CardDescription>
-                  Customize your application experience.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <FormLabel htmlFor="dark-mode">Dark Mode</FormLabel>
-                    <FormDescription>
-                      Toggle between light and dark theme
-                    </FormDescription>
+            <div className="space-y-6">
+              {/* Currency Settings */}
+              <CurrencySettings />
+              
+              {/* Appearance Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Appearance & Preferences</CardTitle>
+                  <CardDescription>
+                    Customize your application experience.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <FormLabel htmlFor="dark-mode">Dark Mode</FormLabel>
+                      <FormDescription>
+                        Toggle between light and dark theme
+                      </FormDescription>
+                    </div>
+                    <Switch
+                      id="dark-mode"
+                      checked={isDarkMode}
+                      onCheckedChange={toggleTheme}
+                    />
                   </div>
-                  <Switch
-                    id="dark-mode"
-                    checked={isDarkMode}
-                    onCheckedChange={toggleTheme}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <FormLabel htmlFor="notifications">Notifications</FormLabel>
-                    <FormDescription>
-                      Enable notifications for important updates
-                    </FormDescription>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <FormLabel htmlFor="notifications">Notifications</FormLabel>
+                      <FormDescription>
+                        Enable notifications for important updates
+                      </FormDescription>
+                    </div>
+                    <Switch id="notifications" defaultChecked />
                   </div>
-                  <Switch id="notifications" defaultChecked />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <FormLabel htmlFor="currency-format">Currency Format</FormLabel>
-                    <FormDescription>
-                      Show currency symbols in lists
-                    </FormDescription>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <FormLabel htmlFor="currency-format">Currency Format</FormLabel>
+                      <FormDescription>
+                        Show currency symbols in lists
+                      </FormDescription>
+                    </div>
+                    <Switch id="currency-format" defaultChecked />
                   </div>
-                  <Switch id="currency-format" defaultChecked />
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
