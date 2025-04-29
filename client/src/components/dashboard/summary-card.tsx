@@ -1,7 +1,8 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { useCurrencyConverter } from "@/hooks/use-currency-converter";
 
 interface SummaryCardProps {
   title: string;
@@ -23,6 +24,7 @@ export function SummaryCard({
   amountClassName = "text-foreground",
 }: SummaryCardProps) {
   const isPositiveChange = change !== undefined && change >= 0;
+  const { formatInUserCurrency, userCurrency } = useCurrencyConverter();
   
   return (
     <Card className="p-4">
@@ -30,8 +32,13 @@ export function SummaryCard({
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>
           <p className={`text-2xl font-mono font-semibold ${amountClassName}`}>
-            {formatCurrency(amount, currency)}
+            {formatInUserCurrency(amount, currency)}
           </p>
+          {currency !== userCurrency && (
+            <p className="text-xs text-muted-foreground">
+              {formatCurrency(amount, currency)} (Original)
+            </p>
+          )}
         </div>
         <span className={`flex h-10 w-10 rounded-full items-center justify-center ${iconClassName}`}>
           {icon}

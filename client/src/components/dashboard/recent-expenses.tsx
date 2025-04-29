@@ -1,10 +1,12 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
 import { useLocation } from "wouter";
 import { Expense } from "@shared/schema";
 import { ShoppingBag, Heart, GraduationCap, Plane } from "lucide-react";
+import { useCurrencyConverter } from "@/hooks/use-currency-converter";
 
 interface RecentExpensesProps {
   expenses: Expense[];
@@ -12,6 +14,7 @@ interface RecentExpensesProps {
 
 export function RecentExpenses({ expenses }: RecentExpensesProps) {
   const [, navigate] = useLocation();
+  const { formatInUserCurrency, userCurrency } = useCurrencyConverter();
   
   // Map of expense categories to icons
   const categoryIcons: Record<string, React.ReactNode> = {
@@ -56,23 +59,34 @@ export function RecentExpenses({ expenses }: RecentExpensesProps) {
             No expenses recorded yet. Track your one-time expenses to get insights.
           </div>
         ) : (
-          expenses.map((expense) => (
-            <div key={expense.id} className="flex items-center justify-between py-2">
-              <div className="flex items-center">
-                <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getBgColor(expense.category)}`}>
-                  {getIcon(expense.category)}
+          expenses.map((expense) => {
+            const expenseCurrency = expense.currency || 'USD';
+            
+            return (
+              <div key={expense.id} className="flex items-center justify-between py-2">
+                <div className="flex items-center">
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${getBgColor(expense.category)}`}>
+                    {getIcon(expense.category)}
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium">{expense.category}</p>
+                    <p className="text-xs text-muted-foreground">{expense.description}</p>
+                  </div>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium">{expense.category}</p>
-                  <p className="text-xs text-muted-foreground">{expense.description}</p>
+                <div className="text-right">
+                  <p className="text-sm font-mono text-red-500">
+                    {formatInUserCurrency(-Number(expense.amount), expenseCurrency)}
+                  </p>
+                  {expenseCurrency !== userCurrency && (
+                    <p className="text-xs text-muted-foreground">
+                      {formatCurrency(-Number(expense.amount), expenseCurrency)}
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">{formatDate(expense.date)}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-mono text-red-500">{formatCurrency(-Number(expense.amount))}</p>
-                <p className="text-xs text-muted-foreground">{formatDate(expense.date)}</p>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </Card>

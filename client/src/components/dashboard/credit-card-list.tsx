@@ -2,11 +2,13 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, daysUntil, formatDate } from "@/lib/utils";
+import { daysUntil, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { PlusCircle } from "lucide-react";
 import { CreditCard } from "@shared/schema";
+import { useCurrencyConverter } from "@/hooks/use-currency-converter";
+import { formatCurrency } from "@/lib/currency";
 
 interface CreditCardListProps {
   creditCards: CreditCard[];
@@ -14,6 +16,7 @@ interface CreditCardListProps {
 
 export function CreditCardList({ creditCards }: CreditCardListProps) {
   const [, navigate] = useLocation();
+  const { formatInUserCurrency, userCurrency } = useCurrencyConverter();
   
   const getBadgeVariant = (dueInDays: number) => {
     if (dueInDays <= 3) return "danger";
@@ -61,6 +64,8 @@ export function CreditCardList({ creditCards }: CreditCardListProps) {
             ) : (
               creditCards.map((card) => {
                 const dueInDays = daysUntil(card.dueDate);
+                const cardCurrency = card.currency || 'USD';
+                
                 return (
                   <TableRow key={card.id} className="hover:bg-muted/50">
                     <TableCell>
@@ -77,10 +82,20 @@ export function CreditCardList({ creditCards }: CreditCardListProps) {
                       </div>
                     </TableCell>
                     <TableCell className="font-mono text-red-500">
-                      {formatCurrency(Number(card.currentBalance))}
+                      {formatInUserCurrency(Number(card.currentBalance), cardCurrency)}
+                      {cardCurrency !== userCurrency && (
+                        <div className="text-xs text-muted-foreground">
+                          {formatCurrency(Number(card.currentBalance), cardCurrency)}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="font-mono">
-                      {formatCurrency(Number(card.creditLimit))}
+                      {formatInUserCurrency(Number(card.creditLimit), cardCurrency)}
+                      {cardCurrency !== userCurrency && (
+                        <div className="text-xs text-muted-foreground">
+                          {formatCurrency(Number(card.creditLimit), cardCurrency)}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm">
                       {formatDate(card.dueDate)}
