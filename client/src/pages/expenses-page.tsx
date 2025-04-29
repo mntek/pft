@@ -1,6 +1,5 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { PlusCircle, Loader2, Receipt } from "lucide-react";
@@ -19,27 +18,31 @@ export default function ExpensesPage() {
 
   if (isLoading) {
     return (
-      <MainLayout title="One-Time Expenses">
+      <>
+        <h1 className="text-2xl font-bold mb-6">One-Time Expenses</h1>
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </MainLayout>
+      </>
     );
   }
 
   if (error) {
     return (
-      <MainLayout title="One-Time Expenses">
+      <>
+        <h1 className="text-2xl font-bold mb-6">One-Time Expenses</h1>
         <div className="text-center py-10">
           <p className="text-destructive">Failed to load expenses. Please try again later.</p>
         </div>
-      </MainLayout>
+      </>
     );
   }
 
   // Group expenses by category for summary
   const expensesByCategory: Record<string, number> = {};
-  expenses.forEach((expense: any) => {
+  const safeExpenses = expenses as any[] || [];
+  
+  safeExpenses.forEach((expense: any) => {
     const category = expense.category;
     if (!expensesByCategory[category]) {
       expensesByCategory[category] = 0;
@@ -49,13 +52,14 @@ export default function ExpensesPage() {
 
   // Filter expenses by selected category
   const filteredExpenses = selectedCategory === 'all' 
-    ? expenses 
-    : expenses.filter((expense: any) => expense.category === selectedCategory);
+    ? safeExpenses 
+    : safeExpenses.filter((expense: any) => expense.category === selectedCategory);
 
   const categories = Object.keys(expensesByCategory);
 
   return (
-    <MainLayout title="One-Time Expenses">
+    <>
+      <h1 className="text-2xl font-bold mb-6">One-Time Expenses</h1>
       <div className="space-y-6">
         <div className="flex justify-end">
           <Button
@@ -88,7 +92,7 @@ export default function ExpensesPage() {
             </Select>
           </div>
           
-          {expenses.length === 0 ? (
+          {safeExpenses.length === 0 ? (
             <div className="text-center py-12">
               <Receipt className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium">No expenses yet</h3>
@@ -107,6 +111,6 @@ export default function ExpensesPage() {
           )}
         </Card>
       </div>
-    </MainLayout>
+    </>
   );
 }
