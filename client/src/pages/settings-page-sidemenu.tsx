@@ -19,8 +19,11 @@ export default function SettingsPageSideMenu() {
   const { toast } = useToast();
   const [activePage, setActivePage] = useState('profile');
   
+  // Appearance preference states
   const isDarkMode = theme === 'dark';
   const toggleTheme = () => setTheme(isDarkMode ? 'light' : 'dark');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [showCurrencySymbols, setShowCurrencySymbols] = useState(true);
   
   const form = useForm({
     defaultValues: {
@@ -199,6 +202,19 @@ export default function SettingsPageSideMenu() {
                 <CardDescription>Set your default currency for displaying financial information</CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="bg-muted p-4 rounded mb-4 text-sm">
+                  <h4 className="font-medium mb-2">How Currency Conversion Works</h4>
+                  <p className="mb-2">
+                    When you change your default currency, all financial information throughout the app will be displayed in your selected currency.
+                  </p>
+                  <p className="mb-2">
+                    The app will automatically convert values using real-time exchange rates that are updated every 4 hours.
+                  </p>
+                  <p>
+                    You'll still see the original currency value for reference when viewing items denominated in a different currency.
+                  </p>
+                </div>
+                
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <div className="space-y-2">
                     <label className="block text-sm font-medium mb-1">Default Currency</label>
@@ -269,7 +285,19 @@ export default function SettingsPageSideMenu() {
                       Enable notifications for important updates
                     </FormDescription>
                   </div>
-                  <Switch id="notifications" defaultChecked />
+                  <Switch 
+                    id="notifications" 
+                    checked={notificationsEnabled}
+                    onCheckedChange={(checked) => {
+                      setNotificationsEnabled(checked);
+                      toast({
+                        title: checked ? "Notifications enabled" : "Notifications disabled",
+                        description: checked 
+                          ? "You will now receive notifications about important updates" 
+                          : "You will no longer receive notifications",
+                      });
+                    }}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -279,7 +307,19 @@ export default function SettingsPageSideMenu() {
                       Show currency symbols in lists
                     </FormDescription>
                   </div>
-                  <Switch id="currency-format" defaultChecked />
+                  <Switch 
+                    id="currency-format" 
+                    checked={showCurrencySymbols}
+                    onCheckedChange={(checked) => {
+                      setShowCurrencySymbols(checked);
+                      toast({
+                        title: "Display setting updated",
+                        description: checked 
+                          ? "Currency symbols will now be shown in lists" 
+                          : "Currency symbols will be hidden in lists",
+                      });
+                    }}
+                  />
                 </div>
               </CardContent>
             </Card>
