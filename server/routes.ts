@@ -13,6 +13,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { sendPasswordResetEmail } from "./email-service";
+import { fetchLatestRates } from "./exchange-rate-service";
 
 // Middleware to ensure user is authenticated
 const isAuthenticated = (req: Request, res: Response, next: Function) => {
