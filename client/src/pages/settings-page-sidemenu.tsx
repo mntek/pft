@@ -21,7 +21,19 @@ export default function SettingsPageSideMenu() {
   
   // Appearance preference states
   const isDarkMode = theme === 'dark';
-  const toggleTheme = () => setTheme(isDarkMode ? 'light' : 'dark');
+  const toggleTheme = () => {
+    try {
+      const newTheme = isDarkMode ? 'light' : 'dark';
+      setTheme(newTheme);
+    } catch (error) {
+      console.error('Error toggling theme:', error);
+      toast({
+        title: "Theme change failed",
+        description: "There was a problem changing the theme.",
+        variant: "destructive"
+      });
+    }
+  };
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [showCurrencySymbols, setShowCurrencySymbols] = useState(true);
   
@@ -274,7 +286,10 @@ export default function SettingsPageSideMenu() {
                   <Switch
                     id="dark-mode"
                     checked={isDarkMode}
-                    onCheckedChange={toggleTheme}
+                    onCheckedChange={() => {
+                      const newTheme = isDarkMode ? 'light' : 'dark';
+                      setTheme(newTheme);
+                    }}
                   />
                 </div>
                 
