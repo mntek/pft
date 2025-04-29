@@ -1,156 +1,163 @@
-import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { MainLayout } from "@/components/layout/main-layout";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
-import {
-  Form,
-  FormControl,
+import React, { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { useTheme } from 'next-themes';
+import { useMutation } from '@tanstack/react-query';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs';
+import { 
   FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
-import { CurrencySettings } from "@/components/settings/currency-settings";
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Loader2 } from 'lucide-react';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { CurrencySettings } from '@/components/settings/currency-settings';
 
-// Schema for profile update form
-const profileSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Please enter a valid email address"),
+// Form schemas
+const profileFormSchema = z.object({
+  username: z.string().min(3).max(30),
+  email: z.string().email(),
 });
 
-// Schema for password update form
-const passwordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(6, "New password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Confirm password must be at least 6 characters"),
+const passwordFormSchema = z.object({
+  currentPassword: z.string().min(6),
+  newPassword: z.string().min(6),
+  confirmPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
 });
 
-type ProfileFormValues = z.infer<typeof profileSchema>;
-type PasswordFormValues = z.infer<typeof passwordSchema>;
+type ProfileFormValues = z.infer<typeof profileFormSchema>;
+type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isDarkMode, setIsDarkMode] = React.useState(true);
-  const [activeTab, setActiveTab] = React.useState("profile");
-
-  // Profile update form
+  const { theme, setTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState('profile');
+  
+  const isDarkMode = theme === 'dark';
+  const toggleTheme = () => setTheme(isDarkMode ? 'light' : 'dark');
+  
+  // Profile form
   const profileForm = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      username: user?.username || "",
-      email: user?.email || "",
+      username: user?.username || '',
+      email: user?.email || '',
     },
   });
-
-  // Password update form
+  
+  // Password form
   const passwordForm = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordSchema),
+    resolver: zodResolver(passwordFormSchema),
     defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
     },
   });
-
+  
+  // Profile update mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (values: ProfileFormValues) => {
-      const response = await apiRequest("PATCH", "/api/user", values);
-      return response.json();
+      const res = await apiRequest('PUT', '/api/user/profile', values);
+      return await res.json();
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Profile updated successfully",
+        title: 'Profile Updated',
+        description: 'Your profile information has been updated successfully.',
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Update user data in cache
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: `Failed to update profile: ${error.message}`,
-        variant: "destructive",
+        title: 'Update Failed',
+        description: error.message,
+        variant: 'destructive',
       });
     },
   });
-
+  
+  // Password update mutation
   const updatePasswordMutation = useMutation({
     mutationFn: async (values: PasswordFormValues) => {
-      const response = await apiRequest("POST", "/api/user/password", {
+      const res = await apiRequest('PUT', '/api/user/password', {
         currentPassword: values.currentPassword,
         newPassword: values.newPassword,
       });
-      return response.json();
+      return await res.json();
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Password updated successfully",
+        title: 'Password Updated',
+        description: 'Your password has been updated. Please log in again.',
       });
+      
+      // Clear form
       passwordForm.reset();
+      
+      // Logout user after password change
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+      }, 2000);
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
-        title: "Error",
-        description: `Failed to update password: ${error.message}`,
-        variant: "destructive",
+        title: 'Update Failed',
+        description: error.message,
+        variant: 'destructive',
       });
     },
   });
-
-  const toggleTheme = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    
-    // Toggle class on the html element
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    
-    toast({
-      title: "Theme Updated",
-      description: `Switched to ${newMode ? 'dark' : 'light'} mode`,
-    });
-  };
-
+  
   function onProfileSubmit(values: ProfileFormValues) {
     updateProfileMutation.mutate(values);
   }
-
+  
   function onPasswordSubmit(values: PasswordFormValues) {
     updatePasswordMutation.mutate(values);
   }
 
   if (!user) {
     return (
-      <>
+      <div>
         <h1 className="text-2xl font-bold mb-6">Account Settings</h1>
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div>
       <h1 className="text-2xl font-bold mb-6">Account Settings</h1>
       <div className="space-y-6">
         <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab}>
@@ -332,6 +339,6 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </>
+    </div>
   );
 }
