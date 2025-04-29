@@ -471,6 +471,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Update Default Currency
+  app.put("/api/user/profile", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      // Validate incoming data
+      const currencyUpdateSchema = z.object({
+        defaultCurrency: z.string().min(3).max(3),
+      });
+      
+      const validatedData = currencyUpdateSchema.parse(req.body);
+      
+      // Update user's default currency
+      const updatedUser = await storage.updateUser(userId, {
+        defaultCurrency: validatedData.defaultCurrency
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return user without password
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update default currency" });
+    }
+  });
+  
   // Password Update
   app.post("/api/user/password", isAuthenticated, async (req, res) => {
     try {

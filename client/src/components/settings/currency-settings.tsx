@@ -3,14 +3,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { CurrencySelect } from '@/components/ui/currency-select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { CURRENCIES } from "@/lib/currency";
 
 // Form schema
 const currencyFormSchema = z.object({
@@ -30,6 +31,17 @@ export function CurrencySettings() {
       defaultCurrency: user?.defaultCurrency || 'USD',
     },
   });
+
+  // Common currencies to show at the top
+  const topCurrencies = ["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CNY"];
+  
+  // Get all currency codes
+  const allCurrencyCodes = CURRENCIES.map(c => c.value);
+  
+  // Filter out top currencies from the rest
+  const otherCurrencies = allCurrencyCodes
+    .filter(code => !topCurrencies.includes(code))
+    .sort();
 
   // Mutation for updating currency
   const { mutate, isPending } = useMutation({
@@ -60,6 +72,12 @@ export function CurrencySettings() {
     mutate(values);
   }
 
+  // Function to get currency names
+  function getCurrencyName(code: string): string {
+    const currency = CURRENCIES.find(c => c.value === code);
+    return currency ? currency.label : code;
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -71,10 +89,41 @@ export function CurrencySettings() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <CurrencySelect 
-              name="defaultCurrency" 
-              label="Default Currency"
-              disabled={isPending}
+            <FormField
+              control={form.control}
+              name="defaultCurrency"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Default Currency</FormLabel>
+                  <FormControl>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value} 
+                      disabled={isPending}
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Select currency" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <div className="mb-2 px-2 text-xs text-muted-foreground">Common Currencies</div>
+                        {topCurrencies.map((code: string) => (
+                          <SelectItem key={code} value={code}>
+                            {code} - {getCurrencyName(code)}
+                          </SelectItem>
+                        ))}
+                        
+                        <div className="my-2 px-2 text-xs text-muted-foreground">All Currencies</div>
+                        {otherCurrencies.map((code: string) => (
+                          <SelectItem key={code} value={code}>
+                            {code} - {getCurrencyName(code)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
             
             <Button type="submit" disabled={isPending}>
