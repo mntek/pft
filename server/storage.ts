@@ -66,6 +66,12 @@ export interface IStorage {
   // Credit card due date notifications
   generateCreditCardDueNotifications(userId: number): Promise<Notification[]>;
   
+  // Exchange rates methods
+  getExchangeRates(): Promise<ExchangeRate[]>;
+  getExchangeRate(fromCurrency: string, toCurrency: string): Promise<ExchangeRate | undefined>;
+  updateExchangeRate(id: number, rate: Partial<InsertExchangeRate>): Promise<ExchangeRate | undefined>;
+  createExchangeRate(rate: InsertExchangeRate): Promise<ExchangeRate>;
+  
   // Session store
   sessionStore: any; // Use any for session store to avoid TypeScript errors
 }
@@ -76,6 +82,7 @@ export class MemStorage implements IStorage {
   private assets: Map<number, Asset>;
   private incomes: Map<number, Income>;
   private expenses: Map<number, Expense>;
+  private exchangeRates: Map<number, ExchangeRate>;
   
   sessionStore: any; // Use any for session store to avoid TypeScript errors
   
@@ -85,6 +92,7 @@ export class MemStorage implements IStorage {
   private assetIdCounter: number;
   private incomeIdCounter: number;
   private expenseIdCounter: number;
+  private exchangeRateIdCounter: number;
 
   constructor() {
     this.users = new Map();

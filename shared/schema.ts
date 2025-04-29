@@ -9,6 +9,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull(),
+  defaultCurrency: text("default_currency").default("USD").notNull(),
 });
 
 // Relations will be defined after all tables
@@ -30,6 +31,7 @@ export const creditCards = pgTable("credit_cards", {
   dueDate: date("due_date").notNull(),
   minPaymentPercent: numeric("min_payment_percent").notNull(),
   currentBalance: numeric("current_balance").notNull(),
+  currency: text("currency").default("USD").notNull(),
   color: text("color").notNull(),
 });
 
@@ -61,6 +63,7 @@ export const incomes = pgTable("incomes", {
   source: text("source").notNull(),
   type: text("type").notNull(), // 'fixed' or 'additional'
   amount: numeric("amount").notNull(),
+  currency: text("currency").default("USD").notNull(),
   date: date("date").notNull(),
 });
 
@@ -75,6 +78,7 @@ export const expenses = pgTable("expenses", {
   description: text("description").notNull(),
   category: text("category").notNull(),
   amount: numeric("amount").notNull(),
+  currency: text("currency").default("USD").notNull(),
   date: date("date").notNull(),
 });
 
@@ -187,3 +191,19 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// Exchange rates schema
+export const exchangeRates = pgTable("exchange_rates", {
+  id: serial("id").primaryKey(),
+  fromCurrency: text("from_currency").notNull(),
+  toCurrency: text("to_currency").notNull(),
+  rate: numeric("rate").notNull(),
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+});
+
+export const insertExchangeRateSchema = createInsertSchema(exchangeRates).omit({
+  id: true,
+});
+
+export type ExchangeRate = typeof exchangeRates.$inferSelect;
+export type InsertExchangeRate = z.infer<typeof insertExchangeRateSchema>;
