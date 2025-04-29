@@ -279,7 +279,7 @@ export function NotificationList() {
       </div>
       
       <div className="border rounded-md overflow-hidden">
-        {notifications.map((notification: any) => (
+        {notifications.map((notification) => (
           <NotificationCard
             key={notification.id}
             notification={notification}

@@ -46,7 +46,14 @@ export function Sidebar() {
   const [location] = useLocation();
   const isMobile = useIsMobile();
   
-  const navItems = [
+  interface NavItemData {
+    icon: React.ReactNode;
+    label: string;
+    href: string;
+    count?: number;
+  }
+  
+  const navItems: NavItemData[] = [
     {
       icon: <BarChart3 className="h-5 w-5" />,
       label: "Dashboard",
