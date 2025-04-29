@@ -618,7 +618,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Exchange Rate Routes
   app.get("/api/exchange-rates", async (req, res) => {
     try {
-      const rates = await storage.getExchangeRates();
+      let rates = await storage.getExchangeRates();
+      
+      // Seed default exchange rates if none exist
+      if (rates.length === 0) {
+        const defaultRates = [
+          { fromCurrency: 'USD', toCurrency: 'USD', rate: 1.0 },
+          { fromCurrency: 'USD', toCurrency: 'EUR', rate: 0.91 },
+          { fromCurrency: 'USD', toCurrency: 'GBP', rate: 0.78 },
+          { fromCurrency: 'USD', toCurrency: 'JPY', rate: 151.82 },
+          { fromCurrency: 'USD', toCurrency: 'CAD', rate: 1.36 },
+          { fromCurrency: 'USD', toCurrency: 'AUD', rate: 1.52 },
+          { fromCurrency: 'USD', toCurrency: 'CHF', rate: 0.90 },
+          { fromCurrency: 'USD', toCurrency: 'CNY', rate: 7.24 },
+          { fromCurrency: 'USD', toCurrency: 'HKD', rate: 7.82 },
+          { fromCurrency: 'USD', toCurrency: 'SGD', rate: 1.35 }
+        ];
+        
+        // Create each exchange rate
+        for (const rate of defaultRates) {
+          await storage.createExchangeRate({
+            fromCurrency: rate.fromCurrency,
+            toCurrency: rate.toCurrency,
+            rate: rate.rate.toString(),
+            lastUpdated: new Date()
+          });
+        }
+        
+        // Fetch the newly created rates
+        rates = await storage.getExchangeRates();
+      }
+      
       res.json(rates);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch exchange rates" });
