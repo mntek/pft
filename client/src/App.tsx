@@ -10,7 +10,7 @@ import CreditCardsPage from "@/pages/credit-cards-page";
 import AssetsPage from "@/pages/assets-page";
 import IncomePage from "@/pages/income-page";
 import ExpensesPage from "@/pages/expenses-page";
-import SettingsPage from "@/pages/settings-page-minimal";
+import SettingsPage from "@/pages/settings-page-sidemenu";
 import RealTimePage from "@/pages/real-time-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
 import ResetPasswordPage from "@/pages/reset-password-page";
