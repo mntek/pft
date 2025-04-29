@@ -1,6 +1,5 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MainLayout } from "@/components/layout/main-layout";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { PlusCircle, Loader2, CreditCard } from "lucide-react";
@@ -72,26 +71,29 @@ export default function CreditCardsPage() {
 
   if (isLoading) {
     return (
-      <MainLayout title="Credit Cards">
+      <>
+        <h1 className="text-2xl font-bold mb-6">Credit Cards</h1>
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </MainLayout>
+      </>
     );
   }
 
   if (error) {
     return (
-      <MainLayout title="Credit Cards">
+      <>
+        <h1 className="text-2xl font-bold mb-6">Credit Cards</h1>
         <div className="text-center py-10">
           <p className="text-destructive">Failed to load credit cards. Please try again later.</p>
         </div>
-      </MainLayout>
+      </>
     );
   }
 
   return (
-    <MainLayout title="Credit Cards">
+    <>
+      <h1 className="text-2xl font-bold mb-6">Credit Cards</h1>
       <div className="space-y-6">
         <div className="flex justify-end">
           <Button
@@ -217,6 +219,6 @@ export default function CreditCardsPage() {
           )}
         </Card>
       </div>
-    </MainLayout>
+    </>
   );
 }

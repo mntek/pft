@@ -1,6 +1,5 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MainLayout } from "@/components/layout/main-layout";
 import { SummaryCard } from "@/components/dashboard/summary-card";
 import { AssetsDebtChart } from "@/components/dashboard/assets-debt-chart";
 import { MonthlyTrendsChart } from "@/components/dashboard/monthly-trends-chart";
@@ -17,21 +16,23 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <MainLayout title="Dashboard">
+      <>
+        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </MainLayout>
+      </>
     );
   }
 
   if (error || !data) {
     return (
-      <MainLayout title="Dashboard">
+      <>
+        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
         <div className="text-center py-10">
           <p className="text-destructive">Failed to load dashboard data. Please try again later.</p>
         </div>
-      </MainLayout>
+      </>
     );
   }
 
@@ -52,7 +53,8 @@ export default function DashboardPage() {
   const debtToAssetRatio = totalAssets > 0 ? (totalDebt / totalAssets) * 100 : 0;
 
   return (
-    <MainLayout title="Financial Overview">
+    <>
+      <h1 className="text-2xl font-bold mb-6">Financial Overview</h1>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between">
           <div className="mb-3 md:mb-0">
@@ -111,6 +113,6 @@ export default function DashboardPage() {
         {/* Recent Expenses */}
         <RecentExpenses expenses={recentExpenses} />
       </div>
-    </MainLayout>
+    </>
   );
 }
