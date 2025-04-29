@@ -1,11 +1,12 @@
-import { users, creditCards, assets, incomes, expenses, passwordResetTokens } from "@shared/schema";
+import { users, creditCards, assets, incomes, expenses, passwordResetTokens, notifications } from "@shared/schema";
 import type { 
   User, InsertUser, 
   CreditCard, InsertCreditCard, 
   Asset, InsertAsset, 
   Income, InsertIncome, 
   Expense, InsertExpense,
-  PasswordResetToken, InsertPasswordResetToken
+  PasswordResetToken, InsertPasswordResetToken,
+  Notification, InsertNotification
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -53,6 +54,17 @@ export interface IStorage {
   createPasswordResetToken(token: InsertPasswordResetToken): Promise<PasswordResetToken>;
   getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
   markPasswordResetTokenAsUsed(id: number): Promise<boolean>;
+  
+  // Notification methods
+  getNotifications(userId: number): Promise<Notification[]>;
+  getUnreadNotificationsCount(userId: number): Promise<number>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number): Promise<boolean>;
+  markAllNotificationsAsRead(userId: number): Promise<boolean>;
+  deleteNotification(id: number): Promise<boolean>;
+  
+  // Credit card due date notifications
+  generateCreditCardDueNotifications(userId: number): Promise<Notification[]>;
   
   // Session store
   sessionStore: any; // Use any for session store to avoid TypeScript errors
@@ -284,6 +296,115 @@ export class MemStorage implements IStorage {
     const updatedToken = { ...resetToken, used: true };
     this.passwordResetTokens.set(id, updatedToken);
     return true;
+  }
+
+  // Notification methods
+  private notifications = new Map<number, Notification>();
+  private notificationIdCounter = 1;
+
+  async getNotifications(userId: number): Promise<Notification[]> {
+    return Array.from(this.notifications.values())
+      .filter(notif => notif.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getUnreadNotificationsCount(userId: number): Promise<number> {
+    return Array.from(this.notifications.values())
+      .filter(notif => notif.userId === userId && !notif.isRead)
+      .length;
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const id = this.notificationIdCounter++;
+    const newNotification: Notification = {
+      ...notification,
+      id,
+      createdAt: new Date()
+    };
+    this.notifications.set(id, newNotification);
+    return newNotification;
+  }
+
+  async markNotificationAsRead(id: number): Promise<boolean> {
+    const notification = this.notifications.get(id);
+    if (!notification) return false;
+    
+    const updatedNotification = { ...notification, isRead: true };
+    this.notifications.set(id, updatedNotification);
+    return true;
+  }
+
+  async markAllNotificationsAsRead(userId: number): Promise<boolean> {
+    const userNotifications = Array.from(this.notifications.values())
+      .filter(notif => notif.userId === userId && !notif.isRead);
+    
+    for (const notification of userNotifications) {
+      this.notifications.set(notification.id, { ...notification, isRead: true });
+    }
+    
+    return true;
+  }
+
+  async deleteNotification(id: number): Promise<boolean> {
+    return this.notifications.delete(id);
+  }
+
+  async generateCreditCardDueNotifications(userId: number): Promise<Notification[]> {
+    // Get the user's credit cards
+    const cards = await this.getCreditCards(userId);
+    const today = new Date();
+    const createdNotifications: Notification[] = [];
+
+    // Check each card for upcoming due dates
+    for (const card of cards) {
+      let dueDate = new Date(card.dueDate);
+      
+      // If the due date is in the past, adjust to the next month
+      if (dueDate < today) {
+        dueDate = new Date(dueDate);
+        dueDate.setMonth(dueDate.getMonth() + 1);
+      }
+      
+      // Calculate days until due date
+      const diffTime = Math.abs(dueDate.getTime() - today.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      // Create notification if due date is within 5 days
+      if (diffDays <= 5) {
+        // Check if a notification already exists for this card and due date
+        const existingNotifications = Array.from(this.notifications.values())
+          .filter(n => 
+            n.userId === userId && 
+            n.relatedTo === 'credit_card' && 
+            n.relatedId === card.id
+          );
+        
+        // Only create a new notification if one doesn't already exist for this card in the last 24 hours
+        const lastDayNotification = existingNotifications.find(n => {
+          const notifDate = new Date(n.createdAt);
+          const dayDiff = Math.abs(today.getTime() - notifDate.getTime()) / (1000 * 60 * 60 * 24);
+          return dayDiff < 1;
+        });
+
+        if (!lastDayNotification) {
+          // Create a notification
+          const notification: InsertNotification = {
+            userId,
+            title: 'Credit Card Payment Due Soon',
+            message: `Your ${card.name} credit card payment is due in ${diffDays} day${diffDays === 1 ? '' : 's'}.`,
+            type: 'warning',
+            relatedTo: 'credit_card',
+            relatedId: card.id,
+            isRead: false
+          };
+          
+          const newNotification = await this.createNotification(notification);
+          createdNotifications.push(newNotification);
+        }
+      }
+    }
+    
+    return createdNotifications;
   }
 }
 

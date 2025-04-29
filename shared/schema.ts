@@ -159,3 +159,31 @@ export const passwordResetTokensRelations = relations(passwordResetTokens, ({ on
     references: [users.id],
   }),
 }));
+
+// Notification schema
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  type: text("type").notNull(), // 'info', 'warning', 'success', 'error'
+  relatedTo: text("related_to"), // 'credit_card', 'asset', 'income', 'expense'
+  relatedId: integer("related_id"), // ID of the related item
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+}));
