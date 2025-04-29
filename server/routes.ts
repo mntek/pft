@@ -309,6 +309,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Notifications API
+  app.get("/api/notifications", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const notifications = await storage.getNotifications(userId);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.get("/api/notifications/unread-count", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const count = await storage.getUnreadNotificationsCount(userId);
+      res.json({ count });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch unread notifications count" });
+    }
+  });
+
+  app.post("/api/notifications/:id/read", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.markNotificationAsRead(id);
+      if (!success) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.post("/api/notifications/read-all", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      await storage.markAllNotificationsAsRead(userId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  app.delete("/api/notifications/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteNotification(id);
+      if (!success) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete notification" });
+    }
+  });
+
+  // Generate credit card due notifications
+  app.post("/api/notifications/generate-due-notifications", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const notifications = await storage.generateCreditCardDueNotifications(userId);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate due notifications" });
+    }
+  });
+
   // Dashboard summary endpoint
   app.get("/api/dashboard", isAuthenticated, async (req, res) => {
     try {
