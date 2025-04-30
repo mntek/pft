@@ -60,11 +60,11 @@ export function AssetForm() {
 
   const createAssetMutation = useMutation({
     mutationFn: async (values: AssetFormValues) => {
-      // Convert string values to numeric types and add lastUpdated
+      // Keep values as strings since that's what the schema expects
       const processedValues = {
         ...values,
         userId: user!.id,
-        amount: parseFloat(values.amount),
+        amount: values.amount, // Keep as string
         lastUpdated: new Date().toISOString(),
       };
       

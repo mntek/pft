@@ -60,7 +60,7 @@ export function ExpenseForm() {
       const processedValues = {
         ...values,
         userId: user!.id,
-        amount: parseFloat(values.amount),
+        amount: values.amount, // Keep as string
       };
       
       const response = await apiRequest("POST", "/api/expenses", processedValues);
