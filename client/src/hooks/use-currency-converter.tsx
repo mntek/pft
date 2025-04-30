@@ -1,6 +1,6 @@
 import { useAuth } from './use-auth';
 import { useExchangeRates } from './use-exchange-rates';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency } from '@/lib/currency';
 
 /**
  * Hook to convert and format amounts based on user's preferred currency

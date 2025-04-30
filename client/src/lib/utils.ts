@@ -5,7 +5,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Format currency with symbol based on currency code
+// Format currency with symbol based on currency code (deprecated - use the one from currency.ts)
+// This is kept for backward compatibility
 export function formatCurrency(amount: number | string, currency: string = 'TRY') {
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
   
@@ -18,7 +19,8 @@ export function formatCurrency(amount: number | string, currency: string = 'TRY'
 
   const symbol = currencySymbols[currency] || currency;
   
-  return `${symbol}${numAmount.toLocaleString('en-US', {
+  // Use Turkish locale for consistent formatting
+  return `${symbol}${numAmount.toLocaleString('tr-TR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -26,9 +28,9 @@ export function formatCurrency(amount: number | string, currency: string = 'TRY'
 
 // Format date from ISO string or Date object to readable format
 export function formatDate(date: string | Date) {
-  return new Date(date).toLocaleDateString('en-US', {
+  return new Date(date).toLocaleDateString('tr-TR', {
     year: 'numeric',
-    month: 'short',
+    month: 'long',
     day: 'numeric',
   });
 }
