@@ -10,13 +10,19 @@ import { ExpenseCategories } from "@/components/expenses/expense-categories";
 import { useCurrencyConverter } from "@/hooks/use-currency-converter";
 
 export default function ExpensesPage() {
+  // Basic state
   const [, navigate] = useLocation();
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   
+  // Fetch expenses data
   const { data: expenses, isLoading, error } = useQuery({
     queryKey: ["/api/expenses"],
   });
 
+  // Get currency converter
+  const { convertToUserCurrency } = useCurrencyConverter();
+  
+  // Show loading state
   if (isLoading) {
     return (
       <>
@@ -28,6 +34,7 @@ export default function ExpensesPage() {
     );
   }
 
+  // Show error state
   if (error) {
     return (
       <>
@@ -39,54 +46,90 @@ export default function ExpensesPage() {
     );
   }
 
-  // Safely handle currency conversion
-  const { convertToUserCurrency } = useCurrencyConverter();
-  
-  // Group expenses by category for summary
-  const expensesByCategory: Record<string, number> = {};
-  const expensesByCategoryUSD: Record<string, number> = {};
-  const safeExpenses = Array.isArray(expenses) ? expenses : [];
-  
-  // Safely process expenses
-  safeExpenses.forEach((expense: any) => {
-    // Skip if the expense doesn't have a valid category
-    if (!expense || !expense.category) return;
-    
-    const category = expense.category;
-    if (!expensesByCategory[category]) {
-      expensesByCategory[category] = 0;
-      expensesByCategoryUSD[category] = 0;
+  // Ensure expenses is an array
+  const safeExpenses = React.useMemo(() => {
+    try {
+      return Array.isArray(expenses) ? expenses : [];
+    } catch (e) {
+      console.error("Error processing expenses:", e);
+      return [];
     }
-    
-    // Make sure we have a valid amount
-    const amount = typeof expense.amount === 'number' ? expense.amount : 
-                  (typeof expense.amount === 'string' ? parseFloat(expense.amount) : 0);
-    
-    // Convert to default currency (TRY) explicitly
-    let amountInTRY = 0;
-    if ((expense.currency || 'TRY') !== 'TRY') {
-      amountInTRY = convertToUserCurrency(amount, expense.currency || 'TRY', 'TRY');
-    } else {
-      amountInTRY = amount;
+  }, [expenses]);
+
+  // Process expense categories
+  const { expensesByCategory, expensesByCategoryUSD, categories } = React.useMemo(() => {
+    try {
+      const byCategory: Record<string, number> = {};
+      const byCategoryUSD: Record<string, number> = {};
+      
+      // Process each expense
+      safeExpenses.forEach((expense: any) => {
+        if (!expense || !expense.category) return;
+        
+        const category = expense.category;
+        if (!byCategory[category]) {
+          byCategory[category] = 0;
+          byCategoryUSD[category] = 0;
+        }
+        
+        // Parse amount safely
+        const amount = typeof expense.amount === 'number' ? expense.amount : 
+                      (typeof expense.amount === 'string' ? parseFloat(expense.amount) : 0);
+        
+        // Convert to TRY
+        let amountInTRY = 0;
+        try {
+          if ((expense.currency || 'TRY') !== 'TRY') {
+            amountInTRY = convertToUserCurrency(amount, expense.currency || 'TRY', 'TRY');
+          } else {
+            amountInTRY = amount;
+          }
+          byCategory[category] += amountInTRY || 0;
+        } catch (e) {
+          console.error("Error converting to TRY:", e);
+        }
+        
+        // Convert to USD
+        try {
+          const amountInUSD = convertToUserCurrency(amount, expense.currency || 'TRY', 'USD');
+          byCategoryUSD[category] += amountInUSD || 0;
+        } catch (e) {
+          console.error("Error converting to USD:", e);
+        }
+      });
+      
+      return { 
+        expensesByCategory: byCategory, 
+        expensesByCategoryUSD: byCategoryUSD,
+        categories: Object.keys(byCategory)
+      };
+    } catch (e) {
+      console.error("Error calculating expense categories:", e);
+      return { 
+        expensesByCategory: {}, 
+        expensesByCategoryUSD: {},
+        categories: []
+      };
     }
-    expensesByCategory[category] += amountInTRY || 0; // Ensure we never add NaN
-    
-    // Convert to USD
-    const amountInUSD = convertToUserCurrency(amount, expense.currency || 'TRY', 'USD');
-    expensesByCategoryUSD[category] += amountInUSD || 0; // Ensure we never add NaN
-  });
+  }, [safeExpenses, convertToUserCurrency]);
 
-  // Filter expenses by selected category, safely handling nulls and undefined values
-  const filteredExpenses = selectedCategory === 'all' 
-    ? safeExpenses 
-    : safeExpenses.filter((expense: any) => expense && expense.category === selectedCategory);
-
-  const categories = Object.keys(expensesByCategory);
+  // Filter expenses by selected category
+  const filteredExpenses = React.useMemo(() => {
+    try {
+      return selectedCategory === 'all' 
+        ? safeExpenses 
+        : safeExpenses.filter((expense: any) => expense && expense.category === selectedCategory);
+    } catch (e) {
+      console.error("Error filtering expenses:", e);
+      return [];
+    }
+  }, [safeExpenses, selectedCategory]);
 
   return (
     <>
       <h1 className="text-2xl font-bold mb-6">One-Time Expenses</h1>
       <div className="space-y-6">
+        {/* Add Expense Button */}
         <div className="flex justify-end">
           <Button
             onClick={() => navigate("/expenses/new")}
