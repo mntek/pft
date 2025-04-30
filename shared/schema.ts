@@ -26,7 +26,7 @@ export const creditCards = pgTable("credit_cards", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   name: text("name").notNull(),
-  bank: text("bank").notNull(),
+  bank: text("bank").notNull(), // This will store bank ID from the bank-data.ts list
   creditLimit: numeric("credit_limit").notNull(),
   statementDate: date("statement_date").notNull(),
   dueDate: date("due_date").notNull(),

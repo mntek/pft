@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TURKISH_BANKS } from "@/lib/bank-data";
 
 // Define card colors
 const CARD_COLORS = [
@@ -33,7 +34,7 @@ const CARD_COLORS = [
 
 const creditCardSchema = insertCreditCardSchema.omit({ userId: true }).extend({
   name: z.string().min(2, "Card name must be at least 2 characters"),
-  bank: z.string().min(2, "Bank name must be at least 2 characters"),
+  bank: z.string().min(1, "Please select a bank"),
   creditLimit: z.string().refine(
     (val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, 
     { message: "Credit limit must be a positive number" }
