@@ -54,7 +54,9 @@ export function ExpenseForm({ isEditing = false }: ExpenseFormProps) {
       if (!response.ok) {
         throw new Error("Expense not found");
       }
-      return response.json();
+      const responseData = await response.json();
+      console.log("Fetched expense data:", responseData);
+      return responseData;
     },
     enabled: !!expenseId,
   });

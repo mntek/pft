@@ -55,7 +55,9 @@ export function IncomeForm({ isEditing = false }: IncomeFormProps) {
       if (!response.ok) {
         throw new Error("Income not found");
       }
-      return response.json();
+      const responseData = await response.json();
+      console.log("Fetched income data:", responseData);
+      return responseData;
     },
     enabled: !!incomeId,
   });
@@ -202,7 +204,7 @@ export function IncomeForm({ isEditing = false }: IncomeFormProps) {
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                         className="flex flex-col space-y-1"
                       >
                         <div className="flex items-center space-x-2">
@@ -244,7 +246,7 @@ export function IncomeForm({ isEditing = false }: IncomeFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Currency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select currency" />
