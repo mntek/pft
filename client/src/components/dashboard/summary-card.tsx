@@ -32,13 +32,11 @@ export function SummaryCard({
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>
           <p className={`text-2xl font-mono font-semibold ${amountClassName}`}>
-            {formatInUserCurrency(amount, currency)}
+            {formatCurrency(amount, currency)}
           </p>
-          {currency !== userCurrency && (
-            <p className="text-xs text-muted-foreground">
-              {formatCurrency(amount, currency)} (Original)
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            {formatInUserCurrency(amount, currency)} (USD Value)
+          </p>
         </div>
         <span className={`flex h-10 w-10 rounded-full items-center justify-center ${iconClassName}`}>
           {icon}

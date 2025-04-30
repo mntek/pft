@@ -30,6 +30,7 @@ function Router() {
       <ProtectedRoute path="/credit-cards/new" component={() => <CreditCardForm />} />
       <ProtectedRoute path="/assets" component={AssetsPage} />
       <ProtectedRoute path="/assets/new" component={() => <AssetForm />} />
+      <ProtectedRoute path="/assets/edit/:id" component={() => <AssetForm isEditing={true} />} />
       <ProtectedRoute path="/income" component={IncomePage} />
       <ProtectedRoute path="/income/new" component={() => <IncomeForm />} />
       <ProtectedRoute path="/expenses" component={ExpensesPage} />

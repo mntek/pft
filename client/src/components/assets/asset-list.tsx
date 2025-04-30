@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Asset } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
+import { Pencil, Trash } from "lucide-react";
+import { useLocation } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +36,7 @@ interface AssetListProps {
 
 export function AssetList({ assets, type }: AssetListProps) {
   const { toast } = useToast();
+  const [, navigate] = useLocation();
   const [assetToDelete, setAssetToDelete] = React.useState<number | null>(null);
   
   const deleteMutation = useMutation({
@@ -106,22 +109,25 @@ export function AssetList({ assets, type }: AssetListProps) {
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDate(asset.lastUpdated)}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate(`/assets/edit/${asset.id}`)}
+                    title="Edit asset"
+                  >
+                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                  
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button
                         variant="ghost"
-                        className="h-8 w-8 p-0"
+                        size="icon"
                         onClick={() => setAssetToDelete(asset.id)}
+                        title="Delete asset"
                       >
-                        <span className="sr-only">Open menu</span>
-                        <svg
-                          className="h-5 w-5 text-muted-foreground"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                        </svg>
+                        <Trash className="h-4 w-4 text-muted-foreground" />
                       </Button>
                     </DialogTrigger>
                     <DialogContent>
