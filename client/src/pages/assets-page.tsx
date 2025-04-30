@@ -6,6 +6,7 @@ import { PlusCircle, Loader2, Wallet } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { AssetList } from "@/components/assets/asset-list";
+import { AssetsSummary } from "@/components/assets/assets-summary";
 
 export default function AssetsPage() {
   const [, navigate] = useLocation();
@@ -45,6 +46,8 @@ export default function AssetsPage() {
     <>
       <h1 className="text-2xl font-bold mb-6">Asset Management</h1>
       <div className="space-y-6">
+        {safeAssets.length > 0 && <AssetsSummary assets={safeAssets} />}
+        
         <div className="flex justify-end">
           <Button
             onClick={() => navigate("/assets/new")}

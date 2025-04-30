@@ -6,8 +6,10 @@ import { PlusCircle, Loader2, CreditCard, Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { CreditCardsSummary } from "@/components/credit-cards/credit-cards-summary";
 
-import { formatCurrency, daysUntil, formatDate } from "@/lib/utils";
+import { daysUntil, formatDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
