@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Expense } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
+import { Pencil } from "lucide-react";
+import { useLocation } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +26,7 @@ interface ExpenseListProps {
 export function ExpenseList({ expenses }: ExpenseListProps) {
   const { toast } = useToast();
   const [expenseToDelete, setExpenseToDelete] = React.useState<number | null>(null);
+  const [, navigate] = useLocation();
   
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -90,7 +93,18 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                 {formatCurrency(-Number(expense.amount))}
               </TableCell>
               <TableCell className="text-right">
-                <Dialog>
+                <div className="flex justify-end space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => navigate(`/expenses/edit/${expense.id}`)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                  </Button>
+                  
+                  <Dialog>
                   <DialogTrigger asChild>
                     <Button
                       variant="ghost"
@@ -131,6 +145,7 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+                </div>
               </TableCell>
             </TableRow>
           ))}
