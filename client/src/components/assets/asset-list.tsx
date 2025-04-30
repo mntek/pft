@@ -109,51 +109,53 @@ export function AssetList({ assets, type }: AssetListProps) {
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDate(asset.lastUpdated)}
                 </TableCell>
-                <TableCell className="text-right space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => navigate(`/assets/edit/${asset.id}`)}
-                    title="Edit asset"
-                  >
-                    <Pencil className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                  
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setAssetToDelete(asset.id)}
-                        title="Delete asset"
-                      >
-                        <Trash className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Delete Asset</DialogTitle>
-                        <DialogDescription>
-                          Are you sure you want to delete this asset? This action cannot be undone.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <DialogFooter>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/assets/edit/${asset.id}`)}
+                      className="flex items-center"
+                    >
+                      <Pencil className="h-4 w-4 mr-1" /> Edit
+                    </Button>
+                    
+                    <Dialog>
+                      <DialogTrigger asChild>
                         <Button
                           variant="outline"
-                          onClick={() => setAssetToDelete(null)}
+                          size="sm"
+                          onClick={() => setAssetToDelete(asset.id)}
+                          className="flex items-center text-destructive border-destructive hover:bg-destructive/10"
                         >
-                          Cancel
+                          <Trash className="h-4 w-4 mr-1" /> Delete
                         </Button>
-                        <Button
-                          variant="destructive"
-                          onClick={handleDelete}
-                          disabled={deleteMutation.isPending}
-                        >
-                          {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Delete Asset</DialogTitle>
+                          <DialogDescription>
+                            Are you sure you want to delete this asset? This action cannot be undone.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button
+                            variant="outline"
+                            onClick={() => setAssetToDelete(null)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={deleteMutation.isPending}
+                          >
+                            {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
