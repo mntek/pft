@@ -74,13 +74,21 @@ export function IncomeForm({ isEditing = false }: IncomeFormProps) {
   // Update form when income data is loaded
   React.useEffect(() => {
     if (income && isEditing) {
+      // Properly set form values including defaultValues
       form.reset({
-        source: income.source,
-        type: income.type,
-        amount: income.amount.toString(),
-        currency: income.currency,
-        date: income.date.split('T')[0], // Format ISO date to YYYY-MM-DD
+        source: income.source || "",
+        type: income.type || "fixed",
+        amount: income.amount ? income.amount.toString() : "",
+        currency: income.currency || "TRY",
+        date: income.date ? income.date.split('T')[0] : new Date().toISOString().split('T')[0],
       });
+      
+      // Also set values directly to ensure they appear in form fields
+      form.setValue("source", income.source || "");
+      form.setValue("type", income.type || "fixed");
+      form.setValue("amount", income.amount ? income.amount.toString() : "");
+      form.setValue("currency", income.currency || "TRY");
+      form.setValue("date", income.date ? income.date.split('T')[0] : new Date().toISOString().split('T')[0]);
     }
   }, [income, form, isEditing]);
   

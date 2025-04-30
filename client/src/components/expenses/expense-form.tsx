@@ -73,13 +73,21 @@ export function ExpenseForm({ isEditing = false }: ExpenseFormProps) {
   // Update form when expense data is loaded
   React.useEffect(() => {
     if (expense && isEditing) {
+      // Properly set form values including defaultValues
       form.reset({
-        description: expense.description,
-        category: expense.category,
-        amount: expense.amount.toString(),
-        currency: expense.currency,
-        date: expense.date.split('T')[0], // Format ISO date to YYYY-MM-DD
+        description: expense.description || "",
+        category: expense.category || "",
+        amount: expense.amount ? expense.amount.toString() : "",
+        currency: expense.currency || "TRY",
+        date: expense.date ? expense.date.split('T')[0] : new Date().toISOString().split('T')[0],
       });
+      
+      // Also set values directly to ensure they appear in form fields
+      form.setValue("description", expense.description || "");
+      form.setValue("category", expense.category || "");
+      form.setValue("amount", expense.amount ? expense.amount.toString() : "");
+      form.setValue("currency", expense.currency || "TRY");
+      form.setValue("date", expense.date ? expense.date.split('T')[0] : new Date().toISOString().split('T')[0]);
     }
   }, [expense, form, isEditing]);
 

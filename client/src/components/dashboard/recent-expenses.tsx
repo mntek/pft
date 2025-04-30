@@ -75,11 +75,11 @@ export function RecentExpenses({ expenses }: RecentExpensesProps) {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-mono text-red-500">
-                    {formatInUserCurrency(-Number(expense.amount), expenseCurrency)}
+                    {formatCurrency(-Number(expense.amount), expenseCurrency)}
                   </p>
                   {expenseCurrency !== userCurrency && (
                     <p className="text-xs text-muted-foreground">
-                      {formatCurrency(-Number(expense.amount), expenseCurrency)}
+                      {formatInUserCurrency(-Number(expense.amount), expenseCurrency)}
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">{formatDate(expense.date)}</p>
