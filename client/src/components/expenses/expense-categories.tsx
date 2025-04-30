@@ -43,10 +43,10 @@ export function ExpenseCategories({ expensesByCategory, expensesByCategoryUSD = 
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm text-muted-foreground">{category}</p>
-                <p className="text-xl font-mono font-semibold text-red-500">
+                <p className="text-2xl font-mono font-semibold text-red-500">
                   {formatCurrency(amount, 'TRY')}
                 </p>
-                <p className="text-xs font-mono text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   {formatCurrency(expensesByCategoryUSD[category] || 0, 'USD')}
                 </p>
               </div>

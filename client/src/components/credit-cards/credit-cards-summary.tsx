@@ -107,9 +107,9 @@ export function CreditCardsSummary({ creditCards }: CreditCardsSummaryProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">{card.title}</p>
-                <h3 className="text-2xl font-bold mt-1">
+                <p className="text-2xl font-mono font-semibold mt-1">
                   {card.valueFormatted || formatCurrency(card.value || 0, 'TRY')}
-                </h3>
+                </p>
                 {!card.valueFormatted && card.valueUSD !== undefined && (
                   <p className="text-xs text-muted-foreground mt-1">
                     {formatCurrency(card.valueUSD, 'USD')}

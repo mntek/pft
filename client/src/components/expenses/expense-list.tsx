@@ -61,24 +61,38 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
   };
   
   const sortedExpenses = React.useMemo(() => {
-    const sortableItems = [...expenses];
+    // Filter out any invalid expenses
+    const validExpenses = Array.isArray(expenses) ? expenses.filter(expense => expense && typeof expense === 'object') : [];
+    const sortableItems = [...validExpenses];
+    
     if (sortConfig !== null) {
       sortableItems.sort((a: any, b: any) => {
         // Handle special cases for different column types
         if (sortConfig.key === 'amount') {
+          // Handle missing or non-numeric values
+          const aAmount = a.amount !== undefined && a.amount !== null ? Number(a.amount) : 0;
+          const bAmount = b.amount !== undefined && b.amount !== null ? Number(b.amount) : 0;
+          
           return sortConfig.direction === 'ascending' 
-            ? Number(a.amount) - Number(b.amount)
-            : Number(b.amount) - Number(a.amount);
+            ? aAmount - bAmount
+            : bAmount - aAmount;
         } else if (sortConfig.key === 'date') {
+          // Handle missing dates
+          const aDate = a.date ? new Date(a.date).getTime() : 0;
+          const bDate = b.date ? new Date(b.date).getTime() : 0;
+          
           return sortConfig.direction === 'ascending' 
-            ? new Date(a.date).getTime() - new Date(b.date).getTime()
-            : new Date(b.date).getTime() - new Date(a.date).getTime();
+            ? aDate - bDate
+            : bDate - aDate;
         } else {
           // Default string comparison for other columns
-          if (a[sortConfig.key] < b[sortConfig.key]) {
+          const aValue = a[sortConfig.key] || '';
+          const bValue = b[sortConfig.key] || '';
+          
+          if (aValue < bValue) {
             return sortConfig.direction === 'ascending' ? -1 : 1;
           }
-          if (a[sortConfig.key] > b[sortConfig.key]) {
+          if (aValue > bValue) {
             return sortConfig.direction === 'ascending' ? 1 : -1;
           }
           return 0;

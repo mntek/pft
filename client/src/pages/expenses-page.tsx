@@ -47,31 +47,39 @@ export default function ExpensesPage() {
   const expensesByCategoryUSD: Record<string, number> = {};
   const safeExpenses = Array.isArray(expenses) ? expenses : [];
   
+  // Safely process expenses
   safeExpenses.forEach((expense: any) => {
+    // Skip if the expense doesn't have a valid category
+    if (!expense || !expense.category) return;
+    
     const category = expense.category;
     if (!expensesByCategory[category]) {
       expensesByCategory[category] = 0;
       expensesByCategoryUSD[category] = 0;
     }
     
+    // Make sure we have a valid amount
+    const amount = typeof expense.amount === 'number' ? expense.amount : 
+                  (typeof expense.amount === 'string' ? parseFloat(expense.amount) : 0);
+    
     // Convert to default currency (TRY) explicitly
     let amountInTRY = 0;
     if ((expense.currency || 'TRY') !== 'TRY') {
-      amountInTRY = convertToUserCurrency(Number(expense.amount), expense.currency || 'TRY', 'TRY');
+      amountInTRY = convertToUserCurrency(amount, expense.currency || 'TRY', 'TRY');
     } else {
-      amountInTRY = Number(expense.amount);
+      amountInTRY = amount;
     }
-    expensesByCategory[category] += amountInTRY;
+    expensesByCategory[category] += amountInTRY || 0; // Ensure we never add NaN
     
     // Convert to USD
-    const amountInUSD = convertToUserCurrency(Number(expense.amount), expense.currency || 'TRY', 'USD');
-    expensesByCategoryUSD[category] += amountInUSD;
+    const amountInUSD = convertToUserCurrency(amount, expense.currency || 'TRY', 'USD');
+    expensesByCategoryUSD[category] += amountInUSD || 0; // Ensure we never add NaN
   });
 
-  // Filter expenses by selected category
+  // Filter expenses by selected category, safely handling nulls and undefined values
   const filteredExpenses = selectedCategory === 'all' 
     ? safeExpenses 
-    : safeExpenses.filter((expense: any) => expense.category === selectedCategory);
+    : safeExpenses.filter((expense: any) => expense && expense.category === selectedCategory);
 
   const categories = Object.keys(expensesByCategory);
 
