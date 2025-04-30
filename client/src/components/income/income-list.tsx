@@ -28,6 +28,10 @@ export function IncomeList({ incomes }: IncomeListProps) {
   const { toast } = useToast();
   const [incomeToDelete, setIncomeToDelete] = React.useState<number | null>(null);
   const [, navigate] = useLocation();
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: string;
+    direction: 'ascending' | 'descending';
+  } | null>(null);
   
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -56,6 +60,42 @@ export function IncomeList({ incomes }: IncomeListProps) {
       deleteMutation.mutate(incomeToDelete);
     }
   };
+  
+  const requestSort = (key: string) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  const sortedIncomes = React.useMemo(() => {
+    const sortableItems = [...incomes];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: any, b: any) => {
+        // Handle special cases for different column types
+        if (sortConfig.key === 'amount') {
+          return sortConfig.direction === 'ascending' 
+            ? Number(a.amount) - Number(b.amount)
+            : Number(b.amount) - Number(a.amount);
+        } else if (sortConfig.key === 'date') {
+          return sortConfig.direction === 'ascending' 
+            ? new Date(a.date).getTime() - new Date(b.date).getTime()
+            : new Date(b.date).getTime() - new Date(a.date).getTime();
+        } else {
+          // Default string comparison for other columns
+          if (a[sortConfig.key] < b[sortConfig.key]) {
+            return sortConfig.direction === 'ascending' ? -1 : 1;
+          }
+          if (a[sortConfig.key] > b[sortConfig.key]) {
+            return sortConfig.direction === 'ascending' ? 1 : -1;
+          }
+          return 0;
+        }
+      });
+    }
+    return sortableItems;
+  }, [incomes, sortConfig]);
 
   return (
     <Card className="p-4">
@@ -64,15 +104,43 @@ export function IncomeList({ incomes }: IncomeListProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Source</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Amount</TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => requestSort('source')}
+              >
+                Source {sortConfig?.key === 'source' && (
+                  <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => requestSort('type')}
+              >
+                Type {sortConfig?.key === 'type' && (
+                  <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => requestSort('date')}
+              >
+                Date {sortConfig?.key === 'date' && (
+                  <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => requestSort('amount')}
+              >
+                Amount {sortConfig?.key === 'amount' && (
+                  <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                )}
+              </TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {incomes.map((income) => (
+            {sortedIncomes.map((income) => (
               <TableRow key={income.id}>
                 <TableCell className="text-sm font-medium">{income.source}</TableCell>
                 <TableCell>
