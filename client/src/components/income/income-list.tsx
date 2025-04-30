@@ -8,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Income } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
+import { Pencil } from "lucide-react";
+import { useLocation } from "wouter";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +27,7 @@ interface IncomeListProps {
 export function IncomeList({ incomes }: IncomeListProps) {
   const { toast } = useToast();
   const [incomeToDelete, setIncomeToDelete] = React.useState<number | null>(null);
+  const [, navigate] = useLocation();
   
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -82,7 +85,18 @@ export function IncomeList({ incomes }: IncomeListProps) {
                   {formatCurrency(Number(income.amount))}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Dialog>
+                  <div className="flex justify-end space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => navigate(`/income/edit/${income.id}`)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                    
+                    <Dialog>
                     <DialogTrigger asChild>
                       <Button
                         variant="ghost"
@@ -123,6 +137,7 @@ export function IncomeList({ incomes }: IncomeListProps) {
                       </DialogFooter>
                     </DialogContent>
                   </Dialog>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

@@ -268,9 +268,12 @@ export function ExpenseForm({ isEditing = false }: ExpenseFormProps) {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={createExpenseMutation.isPending}
+                disabled={isEditing ? updateExpenseMutation.isPending : createExpenseMutation.isPending}
               >
-                {createExpenseMutation.isPending ? "Adding..." : "Add Expense"}
+                {isEditing
+                  ? (updateExpenseMutation.isPending ? "Updating..." : "Update Expense")
+                  : (createExpenseMutation.isPending ? "Adding..." : "Add Expense")
+                }
               </Button>
             </div>
           </form>
