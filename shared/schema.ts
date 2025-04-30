@@ -9,7 +9,7 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull(),
-  defaultCurrency: text("default_currency").default("USD").notNull(),
+  defaultCurrency: text("default_currency").default("TRY").notNull(),
 });
 
 // Relations will be defined after all tables
@@ -32,7 +32,7 @@ export const creditCards = pgTable("credit_cards", {
   dueDate: date("due_date").notNull(),
   minPaymentPercent: numeric("min_payment_percent").notNull(),
   currentBalance: numeric("current_balance").notNull(),
-  currency: text("currency").default("USD").notNull(),
+  currency: text("currency").default("TRY").notNull(),
   color: text("color").notNull(),
 });
 
