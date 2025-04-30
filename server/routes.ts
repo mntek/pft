@@ -214,6 +214,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch incomes" });
     }
   });
+  
+  app.get("/api/incomes/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      const income = await storage.getIncome(id);
+      if (!income || income.userId !== userId) {
+        return res.status(404).json({ message: "Income not found" });
+      }
+      
+      res.json(income);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch income" });
+    }
+  });
 
   app.post("/api/incomes", isAuthenticated, async (req, res) => {
     try {
@@ -283,6 +299,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(expenses);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch expenses" });
+    }
+  });
+  
+  app.get("/api/expenses/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      const expense = await storage.getExpense(id);
+      if (!expense || expense.userId !== userId) {
+        return res.status(404).json({ message: "Expense not found" });
+      }
+      
+      res.json(expense);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch expense" });
     }
   });
 
