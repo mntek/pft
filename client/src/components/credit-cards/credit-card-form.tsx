@@ -73,13 +73,14 @@ export function CreditCardForm() {
 
   const createCardMutation = useMutation({
     mutationFn: async (values: CreditCardFormValues) => {
-      // Convert string values to numeric types
+      // Don't convert strings to numeric types - the backend expects strings
       const processedValues = {
         ...values,
         userId: user!.id,
-        creditLimit: parseFloat(values.creditLimit),
-        minPaymentPercent: parseFloat(values.minPaymentPercent),
-        currentBalance: parseFloat(values.currentBalance),
+        // Keep as strings since that's what the schema expects
+        creditLimit: values.creditLimit,
+        minPaymentPercent: values.minPaymentPercent,
+        currentBalance: values.currentBalance,
       };
       
       const response = await apiRequest("POST", "/api/credit-cards", processedValues);
