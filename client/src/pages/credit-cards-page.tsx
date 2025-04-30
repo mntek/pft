@@ -27,7 +27,7 @@ export default function CreditCardsPage() {
     direction: 'ascending'
   });
   
-  const { data: creditCards, isLoading, error } = useQuery({
+  const { data: creditCards = [], isLoading, error } = useQuery<any[]>({
     queryKey: ["/api/credit-cards"],
   });
 
@@ -138,6 +138,8 @@ export default function CreditCardsPage() {
     <>
       <h1 className="text-2xl font-bold mb-6">Credit Cards</h1>
       <div className="space-y-6">
+        {creditCards && creditCards.length > 0 && <CreditCardsSummary creditCards={creditCards} />}
+        
         <div className="flex justify-end">
           <Button
             onClick={() => navigate("/credit-cards/new")}
@@ -227,10 +229,10 @@ export default function CreditCardsPage() {
                           </div>
                         </TableCell>
                         <TableCell className="font-mono text-red-500">
-                          {formatCurrency(Number(card.currentBalance))}
+                          {formatCurrency(Number(card.currentBalance), card.currency || 'TRY')}
                         </TableCell>
                         <TableCell className="font-mono">
-                          {formatCurrency(Number(card.creditLimit))}
+                          {formatCurrency(Number(card.creditLimit), card.currency || 'TRY')}
                         </TableCell>
                         <TableCell>{formatDate(card.dueDate)}</TableCell>
                         <TableCell>
