@@ -7,17 +7,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Asset } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
 
 const ASSET_COLORS: Record<string, string> = {
   "Checking": "#3b82f6", // blue
@@ -205,41 +197,21 @@ export function AssetList({ assets, type }: AssetListProps) {
                       <Pencil className="h-4 w-4 mr-1" /> Edit
                     </Button>
                     
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setAssetToDelete(asset.id)}
-                          className="flex items-center text-destructive border-destructive hover:bg-destructive/10"
-                        >
-                          <Trash className="h-4 w-4 mr-1" /> Delete
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Delete Asset</DialogTitle>
-                          <DialogDescription>
-                            Are you sure you want to delete this asset? This action cannot be undone.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                          <Button
-                            variant="outline"
-                            onClick={() => setAssetToDelete(null)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={handleDelete}
-                            disabled={deleteMutation.isPending}
-                          >
-                            {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm("Are you sure you want to delete this asset? This action cannot be undone.")) {
+                          setAssetToDelete(asset.id);
+                          deleteMutation.mutate(asset.id);
+                        }
+                      }}
+                      disabled={deleteMutation.isPending && assetToDelete === asset.id}
+                      className="flex items-center"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      {deleteMutation.isPending && assetToDelete === asset.id ? "Deleting..." : "Delete"}
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>

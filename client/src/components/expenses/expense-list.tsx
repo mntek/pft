@@ -9,15 +9,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { Pencil, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
 
 interface ExpenseListProps {
   expenses: Expense[];
@@ -171,47 +163,21 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                     <Pencil className="h-4 w-4 mr-1" /> Edit
                   </Button>
                   
-                  <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="h-8 w-8 p-0"
-                      onClick={() => setExpenseToDelete(expense.id)}
-                    >
-                      <span className="sr-only">Open menu</span>
-                      <svg
-                        className="h-5 w-5 text-muted-foreground"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                      </svg>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Delete Expense</DialogTitle>
-                      <DialogDescription>
-                        Are you sure you want to delete this expense? This action cannot be undone.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setExpenseToDelete(null)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        onClick={handleDelete}
-                        disabled={deleteMutation.isPending}
-                      >
-                        {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm("Are you sure you want to delete this expense? This action cannot be undone.")) {
+                        setExpenseToDelete(expense.id);
+                        deleteMutation.mutate(expense.id);
+                      }
+                    }}
+                    disabled={deleteMutation.isPending && expenseToDelete === expense.id}
+                    className="flex items-center"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    {deleteMutation.isPending && expenseToDelete === expense.id ? "Deleting..." : "Delete"}
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
