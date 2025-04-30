@@ -38,6 +38,10 @@ export function AssetList({ assets, type }: AssetListProps) {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [assetToDelete, setAssetToDelete] = React.useState<number | null>(null);
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: string;
+    direction: 'ascending' | 'descending';
+  } | null>(null);
   
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -66,6 +70,45 @@ export function AssetList({ assets, type }: AssetListProps) {
       deleteMutation.mutate(assetToDelete);
     }
   };
+  
+  const requestSort = (key: string) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  const sortedAssets = React.useMemo(() => {
+    const sortableItems = [...assets];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: any, b: any) => {
+        // Handle special cases for different column types
+        if (sortConfig.key === 'amount') {
+          return sortConfig.direction === 'ascending' 
+            ? Number(a.amount) - Number(b.amount)
+            : Number(b.amount) - Number(a.amount);
+        } else if (sortConfig.key === 'lastUpdated') {
+          return sortConfig.direction === 'ascending' 
+            ? new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime()
+            : new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime();
+        } else {
+          // Default string comparison for other columns
+          const aValue = a[sortConfig.key] || '';
+          const bValue = b[sortConfig.key] || '';
+          
+          if (aValue < bValue) {
+            return sortConfig.direction === 'ascending' ? -1 : 1;
+          }
+          if (aValue > bValue) {
+            return sortConfig.direction === 'ascending' ? 1 : -1;
+          }
+          return 0;
+        }
+      });
+    }
+    return sortableItems;
+  }, [assets, sortConfig]);
 
   return (
     <Card className="p-4">
@@ -73,17 +116,59 @@ export function AssetList({ assets, type }: AssetListProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>{type === 'bank' ? 'Bank' : 'Location'}</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Currency</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Last Updated</TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => requestSort('name')}
+              >
+                Name {sortConfig?.key === 'name' && (
+                  <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => requestSort('institution')}
+              >
+                {type === 'bank' ? 'Bank' : 'Location'} {sortConfig?.key === 'institution' && (
+                  <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => requestSort('assetType')}
+              >
+                Type {sortConfig?.key === 'assetType' && (
+                  <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => requestSort('currency')}
+              >
+                Currency {sortConfig?.key === 'currency' && (
+                  <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => requestSort('amount')}
+              >
+                Amount {sortConfig?.key === 'amount' && (
+                  <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                )}
+              </TableHead>
+              <TableHead 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => requestSort('lastUpdated')}
+              >
+                Last Updated {sortConfig?.key === 'lastUpdated' && (
+                  <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                )}
+              </TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {assets.map((asset) => (
+            {sortedAssets.map((asset) => (
               <TableRow key={asset.id}>
                 <TableCell>
                   <div className="flex items-center">
