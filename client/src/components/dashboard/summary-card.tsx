@@ -1,6 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
+import { formatNumber } from "@/lib/currency";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { useCurrencyConverter } from "@/hooks/use-currency-converter";
 
@@ -51,7 +52,7 @@ export function SummaryCard({
             ) : (
               <ArrowDownRight className="h-3 w-3 mr-1" />
             )}
-            {Math.abs(change)}%
+            {formatNumber(Math.abs(change), 1)}%
           </span>
           <span className="text-xs text-muted-foreground ml-2">from last month</span>
         </div>

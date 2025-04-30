@@ -27,20 +27,36 @@ export function getCurrencySymbol(currencyCode: string): string {
   return currency ? currency.symbol : currencyCode;
 }
 
+// Format number using Turkish locale
+export function formatNumber(amount: string | number, decimals = 2): string {
+  const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+  
+  // Handle NaN case
+  if (isNaN(numericAmount)) {
+    return `0${decimals > 0 ? ',00' : ''}`;
+  }
+  
+  // Format using Turkish locale (dots for thousands, comma for decimals)
+  return numericAmount.toLocaleString('tr-TR', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
+}
+
 // Format amount with currency
 export function formatCurrency(amount: string | number, currencyCode: string): string {
   const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
   
   // Handle NaN case
   if (isNaN(numericAmount)) {
-    return `${getCurrencySymbol(currencyCode)}0.00`;
+    return `${getCurrencySymbol(currencyCode)}0,00`;
   }
   
   // Get currency symbol
   const symbol = getCurrencySymbol(currencyCode);
   
-  // Format amount
-  return `${symbol}${numericAmount.toLocaleString(undefined, {
+  // Format amount using Turkish locale
+  return `${symbol}${numericAmount.toLocaleString('tr-TR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })}`;
