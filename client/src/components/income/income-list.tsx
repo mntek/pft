@@ -155,13 +155,12 @@ export function IncomeList({ incomes }: IncomeListProps) {
                 <TableCell className="text-right">
                   <div className="flex justify-end space-x-1">
                     <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
+                      variant="outline"
+                      size="sm"
                       onClick={() => navigate(`/income/edit/${income.id}`)}
+                      className="flex items-center"
                     >
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Edit</span>
+                      <Pencil className="h-4 w-4 mr-1" /> Edit
                     </Button>
                     
                     <Dialog>

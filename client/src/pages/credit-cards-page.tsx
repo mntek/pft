@@ -24,6 +24,10 @@ export default function CreditCardsPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [cardToDelete, setCardToDelete] = React.useState<number | null>(null);
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: string;
+    direction: 'ascending' | 'descending';
+  } | null>(null);
   
   const { data: creditCards, isLoading, error } = useQuery({
     queryKey: ["/api/credit-cards"],
@@ -56,6 +60,47 @@ export default function CreditCardsPage() {
       deleteMutation.mutate(cardToDelete);
     }
   };
+  
+  const requestSort = (key: string) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  const sortedCreditCards = React.useMemo(() => {
+    if (!creditCards) return [];
+    
+    const sortableItems = [...creditCards];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: any, b: any) => {
+        // Handle special cases for different column types
+        if (sortConfig.key === 'currentBalance' || sortConfig.key === 'creditLimit') {
+          return sortConfig.direction === 'ascending' 
+            ? Number(a[sortConfig.key]) - Number(b[sortConfig.key])
+            : Number(b[sortConfig.key]) - Number(a[sortConfig.key]);
+        } else if (sortConfig.key === 'dueDate') {
+          return sortConfig.direction === 'ascending' 
+            ? new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+            : new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+        } else if (sortConfig.key === 'name' || sortConfig.key === 'bank') {
+          const aValue = a[sortConfig.key] || '';
+          const bValue = b[sortConfig.key] || '';
+          
+          if (aValue < bValue) {
+            return sortConfig.direction === 'ascending' ? -1 : 1;
+          }
+          if (aValue > bValue) {
+            return sortConfig.direction === 'ascending' ? 1 : -1;
+          }
+          return 0;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [creditCards, sortConfig]);
 
   const getBadgeVariant = (dueInDays: number) => {
     if (dueInDays <= 3) return "danger";
@@ -126,16 +171,44 @@ export default function CreditCardsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Card</TableHead>
-                    <TableHead>Balance</TableHead>
-                    <TableHead>Limit</TableHead>
-                    <TableHead>Due Date</TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => requestSort('name')}
+                    >
+                      Card {sortConfig?.key === 'name' && (
+                        <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                      )}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => requestSort('currentBalance')}
+                    >
+                      Balance {sortConfig?.key === 'currentBalance' && (
+                        <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                      )}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => requestSort('creditLimit')}
+                    >
+                      Limit {sortConfig?.key === 'creditLimit' && (
+                        <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                      )}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => requestSort('dueDate')}
+                    >
+                      Due Date {sortConfig?.key === 'dueDate' && (
+                        <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                      )}
+                    </TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {creditCards.map((card) => {
+                  {sortedCreditCards.map((card) => {
                     const dueInDays = daysUntil(card.dueDate);
                     return (
                       <TableRow key={card.id}>
