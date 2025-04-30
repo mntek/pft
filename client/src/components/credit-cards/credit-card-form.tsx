@@ -83,7 +83,7 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
     resolver: zodResolver(creditCardSchema),
     defaultValues: {
       name: "",
-      bank: "",
+      bank: "ziraat", // Default to a common Turkish bank
       creditLimit: "",
       statementDate: "",
       dueDate: "",
@@ -225,9 +225,20 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Issuing Bank</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Citibank" {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select bank" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {TURKISH_BANKS.map((bank) => (
+                          <SelectItem key={bank.id} value={bank.id}>
+                            {bank.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -309,7 +320,7 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Currency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select currency" />

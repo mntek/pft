@@ -11,6 +11,7 @@ import { formatCurrency, daysUntil, formatDate } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { getBankName } from "@/lib/bank-data";
 
 export default function CreditCardsPage() {
   const [, navigate] = useLocation();
@@ -216,7 +217,7 @@ export default function CreditCardsPage() {
                             </div>
                             <div className="ml-3">
                               <p className="text-sm font-medium">{card.name}</p>
-                              <p className="text-xs text-muted-foreground">{card.bank}</p>
+                              <p className="text-xs text-muted-foreground">{getBankName(card.bank)}</p>
                             </div>
                           </div>
                         </TableCell>

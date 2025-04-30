@@ -9,6 +9,7 @@ import { PlusCircle } from "lucide-react";
 import { CreditCard } from "@shared/schema";
 import { useCurrencyConverter } from "@/hooks/use-currency-converter";
 import { formatCurrency } from "@/lib/currency";
+import { getBankName } from "@/lib/bank-data";
 
 interface CreditCardListProps {
   creditCards: CreditCard[];
