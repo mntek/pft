@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/currency";
+import { formatCurrency } from "@/lib/utils";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { useCurrencyConverter } from "@/hooks/use-currency-converter";
 

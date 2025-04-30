@@ -61,11 +61,12 @@ export function AssetForm() {
   const createAssetMutation = useMutation({
     mutationFn: async (values: AssetFormValues) => {
       // Keep values as strings since that's what the schema expects
+      // Make sure lastUpdated is a valid ISO string
       const processedValues = {
         ...values,
         userId: user!.id,
         amount: values.amount, // Keep as string
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(), // This generates a proper date string
       };
       
       const response = await apiRequest("POST", "/api/assets", processedValues);

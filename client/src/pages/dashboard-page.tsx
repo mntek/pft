@@ -77,6 +77,7 @@ export default function DashboardPage() {
           <SummaryCard
             title="Total Assets"
             amount={totalAssets}
+            currency="TRY"
             change={5.2}
             icon={<Wallet className="h-5 w-5" />}
             iconClassName="bg-green-500 bg-opacity-20 text-green-500"
@@ -86,6 +87,7 @@ export default function DashboardPage() {
           <SummaryCard
             title="Total Debt"
             amount={totalDebt}
+            currency="TRY"
             change={2.1}
             icon={<CreditCard className="h-5 w-5" />}
             iconClassName="bg-red-500 bg-opacity-20 text-red-500"
@@ -95,6 +97,7 @@ export default function DashboardPage() {
           <SummaryCard
             title="Monthly Income"
             amount={totalIncome}
+            currency="TRY"
             change={1.5}
             icon={<DollarSign className="h-5 w-5" />}
             iconClassName="bg-primary bg-opacity-20 text-primary"
