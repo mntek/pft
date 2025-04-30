@@ -255,19 +255,28 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
                     <FormLabel>Credit Limit</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="5000.00" 
+                        placeholder="5,000.00" 
                         {...field} 
                         onChange={(e) => {
-                          // Only allow numbers and decimal point
-                          const value = e.target.value.replace(/[^0-9.]/g, '');
+                          // Remove all non-numeric characters except decimal point
+                          const rawValue = e.target.value.replace(/[^0-9.]/g, '');
+                          
                           // Format with two decimal places if there's a decimal point
-                          const parts = value.split('.');
-                          if (parts.length > 1) {
-                            parts[1] = parts[1].substring(0, 2); // Limit to 2 decimal places
-                            field.onChange(parts.join('.'));
-                          } else {
-                            field.onChange(value);
-                          }
+                          const parts = rawValue.split('.');
+                          let integerPart = parts[0];
+                          let decimalPart = parts.length > 1 ? parts[1].substring(0, 2) : '';
+                          
+                          // Add thousands separators to integer part
+                          integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                          
+                          // Combine integer and decimal parts
+                          const formattedValue = decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
+                          
+                          // Update field with original value (without commas) for backend processing
+                          field.onChange(rawValue);
+                          
+                          // Display formatted value with commas in the input
+                          e.target.value = formattedValue;
                         }}
                       />
                     </FormControl>
@@ -287,16 +296,25 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
                         placeholder="0.00" 
                         {...field} 
                         onChange={(e) => {
-                          // Only allow numbers and decimal point
-                          const value = e.target.value.replace(/[^0-9.]/g, '');
+                          // Remove all non-numeric characters except decimal point
+                          const rawValue = e.target.value.replace(/[^0-9.]/g, '');
+                          
                           // Format with two decimal places if there's a decimal point
-                          const parts = value.split('.');
-                          if (parts.length > 1) {
-                            parts[1] = parts[1].substring(0, 2); // Limit to 2 decimal places
-                            field.onChange(parts.join('.'));
-                          } else {
-                            field.onChange(value);
-                          }
+                          const parts = rawValue.split('.');
+                          let integerPart = parts[0];
+                          let decimalPart = parts.length > 1 ? parts[1].substring(0, 2) : '';
+                          
+                          // Add thousands separators to integer part
+                          integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                          
+                          // Combine integer and decimal parts
+                          const formattedValue = decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
+                          
+                          // Update field with original value (without commas) for backend processing
+                          field.onChange(rawValue);
+                          
+                          // Display formatted value with commas in the input
+                          e.target.value = formattedValue;
                         }}
                       />
                     </FormControl>
