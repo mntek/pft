@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ExpenseList } from "@/components/expenses/expense-list";
 import { ExpenseCategories } from "@/components/expenses/expense-categories";
+import { useCurrencyConverter } from "@/hooks/use-currency-converter";
 
 export default function ExpensesPage() {
   const [, navigate] = useLocation();
@@ -38,16 +39,27 @@ export default function ExpensesPage() {
     );
   }
 
+  const { convertToUserCurrency } = useCurrencyConverter();
+  
   // Group expenses by category for summary
   const expensesByCategory: Record<string, number> = {};
+  const expensesByCategoryUSD: Record<string, number> = {};
   const safeExpenses = expenses as any[] || [];
   
   safeExpenses.forEach((expense: any) => {
     const category = expense.category;
     if (!expensesByCategory[category]) {
       expensesByCategory[category] = 0;
+      expensesByCategoryUSD[category] = 0;
     }
-    expensesByCategory[category] += Number(expense.amount);
+    
+    // Convert to default currency (TRY)
+    const amountInTRY = convertToUserCurrency(Number(expense.amount), expense.currency || 'TRY');
+    expensesByCategory[category] += amountInTRY;
+    
+    // Convert to USD
+    const amountInUSD = convertToUserCurrency(Number(expense.amount), expense.currency || 'TRY', 'USD');
+    expensesByCategoryUSD[category] += amountInUSD;
   });
 
   // Filter expenses by selected category
@@ -71,7 +83,10 @@ export default function ExpensesPage() {
         </div>
 
         {/* Expense Categories */}
-        <ExpenseCategories expensesByCategory={expensesByCategory} />
+        <ExpenseCategories 
+          expensesByCategory={expensesByCategory} 
+          expensesByCategoryUSD={expensesByCategoryUSD}
+        />
 
         {/* Expense List */}
         <Card className="p-4">

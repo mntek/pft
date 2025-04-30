@@ -1,6 +1,6 @@
 import React from "react";
 import { ShoppingBag, Heart, GraduationCap, Plane, ShoppingCart } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
 
 // Category icons and colors
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
@@ -19,9 +19,10 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 interface ExpenseCategoriesProps {
   expensesByCategory: Record<string, number>;
+  expensesByCategoryUSD?: Record<string, number>;
 }
 
-export function ExpenseCategories({ expensesByCategory }: ExpenseCategoriesProps) {
+export function ExpenseCategories({ expensesByCategory, expensesByCategoryUSD = {} }: ExpenseCategoriesProps) {
   const getIcon = (category: string) => {
     return CATEGORY_ICONS[category] || <ShoppingCart className="h-4 w-4 text-gray-500" />;
   };
@@ -43,7 +44,10 @@ export function ExpenseCategories({ expensesByCategory }: ExpenseCategoriesProps
               <div>
                 <p className="text-sm text-muted-foreground">{category}</p>
                 <p className="text-xl font-mono font-semibold text-red-500">
-                  {formatCurrency(amount)}
+                  {formatCurrency(amount, 'TRY')}
+                </p>
+                <p className="text-xs font-mono text-muted-foreground">
+                  {formatCurrency(expensesByCategoryUSD[category] || 0, 'USD')}
                 </p>
               </div>
               <span className={`flex h-8 w-8 rounded-full items-center justify-center ${getColor(category)}`}>
