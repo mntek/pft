@@ -175,27 +175,17 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     let mounted = true;
     
     if (autoConnect && mounted) {
-      console.log("Auto-connecting to WebSocket");
-      try {
-        connect();
-      } catch (err) {
-        console.error("Error connecting to WebSocket:", err);
-      }
+      connect();
     }
     
     // Cleanup function
     return () => {
       mounted = false;
-      console.log("Cleaning up WebSocket connection");
       if (socketRef.current) {
-        try {
-          socketRef.current.close();
-        } catch (err) {
-          console.error("Error closing WebSocket:", err);
-        }
+        socketRef.current.close();
       }
     };
-  }, [autoConnect, connect]); // Include connect to ensure we use the latest version
+  }, [autoConnect]); // Remove connect from dependencies to prevent reconnection loops
   
   return {
     isConnected,
