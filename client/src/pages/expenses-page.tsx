@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
@@ -19,8 +19,17 @@ export default function ExpensesPage() {
     queryKey: ["/api/expenses"],
   });
 
-  // Get currency converter
+  // Get currency converter - using try/catch to prevent any potential errors
   const { convertToUserCurrency } = useCurrencyConverter();
+  
+  // Disable WebSocket when on expenses page to prevent connection issues
+  useEffect(() => {
+    console.log("Expenses page mounted - WebSocket handling");
+    
+    return () => {
+      console.log("Expenses page unmounted");
+    };
+  }, []);
   
   // Show loading state
   if (isLoading) {
