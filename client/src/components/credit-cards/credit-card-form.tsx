@@ -69,7 +69,7 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
     queryKey: ["/api/credit-cards", cardId],
     queryFn: async () => {
       if (!cardId) return null;
-      const response = await fetch(`/api/credit-cards/${cardId}`);
+      const response = await apiRequest("GET", `/api/credit-cards/${cardId}`);
       if (!response.ok) {
         throw new Error("Credit card not found");
       }

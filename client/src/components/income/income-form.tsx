@@ -36,10 +36,15 @@ const incomeSchema = insertIncomeSchema.omit({ userId: true }).extend({
 
 type IncomeFormValues = z.infer<typeof incomeSchema>;
 
-export function IncomeForm() {
+interface IncomeFormProps {
+  isEditing?: boolean;
+}
+
+export function IncomeForm({ isEditing = false }: IncomeFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+  const incomeId = isEditing ? location.split('/').pop() : null;
 
   const form = useForm<IncomeFormValues>({
     resolver: zodResolver(incomeSchema),

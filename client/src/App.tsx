@@ -34,8 +34,10 @@ function Router() {
       <ProtectedRoute path="/assets/edit/:id" component={() => <AssetForm isEditing={true} />} />
       <ProtectedRoute path="/income" component={IncomePage} />
       <ProtectedRoute path="/income/new" component={() => <IncomeForm />} />
+      <ProtectedRoute path="/income/edit/:id" component={() => <IncomeForm isEditing={true} />} />
       <ProtectedRoute path="/expenses" component={ExpensesPage} />
       <ProtectedRoute path="/expenses/new" component={() => <ExpenseForm />} />
+      <ProtectedRoute path="/expenses/edit/:id" component={() => <ExpenseForm isEditing={true} />} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/real-time" component={RealTimePage} />
       <Route component={NotFound} />
