@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { insertCreditCardSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -145,8 +145,44 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
     },
   });
 
+  const updateCardMutation = useMutation({
+    mutationFn: async (values: CreditCardFormValues) => {
+      if (!cardId) throw new Error("Card ID is required for updates");
+      
+      const processedValues = {
+        ...values,
+        creditLimit: values.creditLimit,
+        minPaymentPercent: values.minPaymentPercent,
+        currentBalance: values.currentBalance,
+      };
+      
+      const response = await apiRequest("PUT", `/api/credit-cards/${cardId}`, processedValues);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Credit card updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/credit-cards"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      navigate("/credit-cards");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update credit card: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
   function onSubmit(values: CreditCardFormValues) {
-    createCardMutation.mutate(values);
+    if (isEditing) {
+      updateCardMutation.mutate(values);
+    } else {
+      createCardMutation.mutate(values);
+    }
   }
 
   return (
@@ -322,9 +358,12 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={createCardMutation.isPending}
+                disabled={isEditing ? updateCardMutation.isPending : createCardMutation.isPending}
               >
-                {createCardMutation.isPending ? "Adding..." : "Add Credit Card"}
+                {isEditing 
+                  ? (updateCardMutation.isPending ? "Updating..." : "Update Credit Card")
+                  : (createCardMutation.isPending ? "Adding..." : "Add Credit Card")
+                }
               </Button>
             </div>
           </form>

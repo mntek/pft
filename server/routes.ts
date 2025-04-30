@@ -52,6 +52,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create credit card" });
     }
   });
+  
+  app.get("/api/credit-cards/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      // Verify card belongs to user
+      const card = await storage.getCreditCard(id);
+      if (!card || card.userId !== userId) {
+        return res.status(404).json({ message: "Credit card not found" });
+      }
+      
+      res.json(card);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch credit card" });
+    }
+  });
 
   app.put("/api/credit-cards/:id", isAuthenticated, async (req, res) => {
     try {
