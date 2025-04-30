@@ -78,7 +78,7 @@ export function CreditCardList({ creditCards }: CreditCardListProps) {
                         </div>
                         <div className="ml-3">
                           <p className="text-sm font-medium">{card.name}</p>
-                          <p className="text-xs text-muted-foreground">{card.bank}</p>
+                          <p className="text-xs text-muted-foreground">{getBankName(card.bank)}</p>
                         </div>
                       </div>
                     </TableCell>
