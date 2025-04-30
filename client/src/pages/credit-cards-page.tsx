@@ -2,19 +2,11 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { PlusCircle, Loader2, CreditCard } from "lucide-react";
+import { PlusCircle, Loader2, CreditCard, Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
 import { formatCurrency, daysUntil, formatDate } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
@@ -248,75 +240,24 @@ export default function CreditCardsPage() {
                               onClick={() => navigate(`/credit-cards/edit/${card.id}`)}
                               className="flex items-center"
                             >
-                              <svg 
-                                xmlns="http://www.w3.org/2000/svg" 
-                                width="16" 
-                                height="16" 
-                                viewBox="0 0 24 24" 
-                                fill="none" 
-                                stroke="currentColor" 
-                                strokeWidth="2" 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                                className="h-4 w-4 mr-1"
-                              >
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                              </svg>
-                              Edit
+                              <Pencil className="h-4 w-4 mr-1" /> Edit
                             </Button>
                             
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setCardToDelete(card.id)}
-                                  className="flex items-center text-destructive border-destructive hover:bg-destructive/10"
-                                >
-                                  <svg 
-                                    xmlns="http://www.w3.org/2000/svg" 
-                                    width="16" 
-                                    height="16" 
-                                    viewBox="0 0 24 24" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2" 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    className="h-4 w-4 mr-1"
-                                  >
-                                    <path d="M3 6h18" />
-                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                  </svg>
-                                  Delete
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Delete Credit Card</DialogTitle>
-                                <DialogDescription>
-                                  Are you sure you want to delete this credit card? This action cannot be undone.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <DialogFooter>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => setCardToDelete(null)}
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  variant="destructive"
-                                  onClick={handleDelete}
-                                  disabled={deleteMutation.isPending}
-                                >
-                                  {deleteMutation.isPending ? "Deleting..." : "Delete"}
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                if (confirm("Are you sure you want to delete this credit card? This action cannot be undone.")) {
+                                  setCardToDelete(card.id);
+                                  deleteMutation.mutate(card.id);
+                                }
+                              }}
+                              disabled={deleteMutation.isPending && cardToDelete === card.id}
+                              className="flex items-center"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              {deleteMutation.isPending && cardToDelete === card.id ? "Deleting..." : "Delete"}
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
