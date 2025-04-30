@@ -155,23 +155,32 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
         </TableHeader>
         <TableBody>
           {sortedExpenses.map((expense) => (
-            <TableRow key={expense.id}>
-              <TableCell className="text-sm font-medium">{expense.description}</TableCell>
+            <TableRow key={expense.id || 'unknown'}>
+              <TableCell className="text-sm font-medium">{expense.description || 'Unknown'}</TableCell>
               <TableCell>
-                <Badge variant={getCategoryVariant(expense.category)}>
-                  {expense.category}
-                </Badge>
+                {expense.category ? (
+                  <Badge variant={getCategoryVariant(expense.category)}>
+                    {expense.category}
+                  </Badge>
+                ) : (
+                  <Badge variant="default">Uncategorized</Badge>
+                )}
               </TableCell>
-              <TableCell className="text-sm">{formatDate(expense.date)}</TableCell>
-              <TableCell className="font-mono text-red-500">
-                {formatCurrency(-Number(expense.amount))}
+              <TableCell className="text-sm">{expense.date ? formatDate(expense.date) : 'N/A'}</TableCell>
+              <TableCell className="font-mono font-semibold text-red-500">
+                {formatCurrency(-(expense.amount ? Number(expense.amount) : 0), expense.currency || 'TRY')}
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-1">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate(`/expenses/edit/${expense.id}`)}
+                    onClick={() => {
+                      if (expense.id) {
+                        navigate(`/expenses/edit/${expense.id}`);
+                      }
+                    }}
+                    disabled={!expense.id}
                     className="flex items-center"
                   >
                     <Pencil className="h-4 w-4 mr-1" /> Edit
@@ -181,12 +190,12 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
                     variant="destructive"
                     size="sm"
                     onClick={() => {
-                      if (confirm("Are you sure you want to delete this expense? This action cannot be undone.")) {
+                      if (expense.id && confirm("Are you sure you want to delete this expense? This action cannot be undone.")) {
                         setExpenseToDelete(expense.id);
                         deleteMutation.mutate(expense.id);
                       }
                     }}
-                    disabled={deleteMutation.isPending && expenseToDelete === expense.id}
+                    disabled={!expense.id || (deleteMutation.isPending && expenseToDelete === expense.id)}
                     className="flex items-center"
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
