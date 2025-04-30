@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { insertIncomeSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -46,6 +46,20 @@ export function IncomeForm({ isEditing = false }: IncomeFormProps) {
   const [location, navigate] = useLocation();
   const incomeId = isEditing ? location.split('/').pop() : null;
 
+  // Fetch income data if editing
+  const { data: income, isLoading: isLoadingIncome } = useQuery({
+    queryKey: ["/api/incomes", incomeId],
+    queryFn: async () => {
+      if (!incomeId) return null;
+      const response = await apiRequest("GET", `/api/incomes/${incomeId}`);
+      if (!response.ok) {
+        throw new Error("Income not found");
+      }
+      return response.json();
+    },
+    enabled: !!incomeId,
+  });
+  
   const form = useForm<IncomeFormValues>({
     resolver: zodResolver(incomeSchema),
     defaultValues: {
@@ -56,6 +70,19 @@ export function IncomeForm({ isEditing = false }: IncomeFormProps) {
       date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
     },
   });
+  
+  // Update form when income data is loaded
+  React.useEffect(() => {
+    if (income && isEditing) {
+      form.reset({
+        source: income.source,
+        type: income.type,
+        amount: income.amount.toString(),
+        currency: income.currency,
+        date: income.date.split('T')[0], // Format ISO date to YYYY-MM-DD
+      });
+    }
+  }, [income, form, isEditing]);
   
   const currencies = ["TRY", "USD", "EUR", "GBP"]; // Added TRY first
 
@@ -89,8 +116,42 @@ export function IncomeForm({ isEditing = false }: IncomeFormProps) {
     },
   });
 
+  const updateIncomeMutation = useMutation({
+    mutationFn: async (values: IncomeFormValues) => {
+      if (!incomeId) throw new Error("Income ID is required for updates");
+      
+      const processedValues = {
+        ...values,
+        amount: values.amount,
+      };
+      
+      const response = await apiRequest("PUT", `/api/incomes/${incomeId}`, processedValues);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Income updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/incomes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      navigate("/income");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update income: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
   function onSubmit(values: IncomeFormValues) {
-    createIncomeMutation.mutate(values);
+    if (isEditing) {
+      updateIncomeMutation.mutate(values);
+    } else {
+      createIncomeMutation.mutate(values);
+    }
   }
 
   return (
@@ -213,9 +274,12 @@ export function IncomeForm({ isEditing = false }: IncomeFormProps) {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={createIncomeMutation.isPending}
+                disabled={isEditing ? updateIncomeMutation.isPending : createIncomeMutation.isPending}
               >
-                {createIncomeMutation.isPending ? "Adding..." : "Add Income"}
+                {isEditing
+                  ? (updateIncomeMutation.isPending ? "Updating..." : "Update Income")
+                  : (createIncomeMutation.isPending ? "Adding..." : "Add Income")
+                }
               </Button>
             </div>
           </form>

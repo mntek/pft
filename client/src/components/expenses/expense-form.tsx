@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { insertExpenseSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -35,11 +35,30 @@ const expenseSchema = insertExpenseSchema.omit({ userId: true }).extend({
 
 type ExpenseFormValues = z.infer<typeof expenseSchema>;
 
-export function ExpenseForm() {
+interface ExpenseFormProps {
+  isEditing?: boolean;
+}
+
+export function ExpenseForm({ isEditing = false }: ExpenseFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+  const expenseId = isEditing ? location.split('/').pop() : null;
 
+  // Fetch expense data if editing
+  const { data: expense, isLoading: isLoadingExpense } = useQuery({
+    queryKey: ["/api/expenses", expenseId],
+    queryFn: async () => {
+      if (!expenseId) return null;
+      const response = await apiRequest("GET", `/api/expenses/${expenseId}`);
+      if (!response.ok) {
+        throw new Error("Expense not found");
+      }
+      return response.json();
+    },
+    enabled: !!expenseId,
+  });
+  
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
@@ -50,6 +69,19 @@ export function ExpenseForm() {
       date: new Date().toISOString().split('T')[0], // Current date in YYYY-MM-DD format
     },
   });
+  
+  // Update form when expense data is loaded
+  React.useEffect(() => {
+    if (expense && isEditing) {
+      form.reset({
+        description: expense.description,
+        category: expense.category,
+        amount: expense.amount.toString(),
+        currency: expense.currency,
+        date: expense.date.split('T')[0], // Format ISO date to YYYY-MM-DD
+      });
+    }
+  }, [expense, form, isEditing]);
 
   const categories = ["Education", "Health", "Travel", "Shopping", "Food", "Housing", "Entertainment", "Other"];
   const currencies = ["TRY", "USD", "EUR", "GBP"]; // Added TRY first
@@ -84,8 +116,42 @@ export function ExpenseForm() {
     },
   });
 
+  const updateExpenseMutation = useMutation({
+    mutationFn: async (values: ExpenseFormValues) => {
+      if (!expenseId) throw new Error("Expense ID is required for updates");
+      
+      const processedValues = {
+        ...values,
+        amount: values.amount,
+      };
+      
+      const response = await apiRequest("PUT", `/api/expenses/${expenseId}`, processedValues);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Expense updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      navigate("/expenses");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update expense: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
   function onSubmit(values: ExpenseFormValues) {
-    createExpenseMutation.mutate(values);
+    if (isEditing) {
+      updateExpenseMutation.mutate(values);
+    } else {
+      createExpenseMutation.mutate(values);
+    }
   }
 
   return (
