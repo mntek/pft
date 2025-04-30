@@ -27,6 +27,10 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
   const { toast } = useToast();
   const [expenseToDelete, setExpenseToDelete] = React.useState<number | null>(null);
   const [, navigate] = useLocation();
+  const [sortConfig, setSortConfig] = React.useState<{
+    key: string;
+    direction: 'ascending' | 'descending';
+  } | null>(null);
   
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -55,6 +59,42 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
       deleteMutation.mutate(expenseToDelete);
     }
   };
+  
+  const requestSort = (key: string) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  const sortedExpenses = React.useMemo(() => {
+    const sortableItems = [...expenses];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: any, b: any) => {
+        // Handle special cases for different column types
+        if (sortConfig.key === 'amount') {
+          return sortConfig.direction === 'ascending' 
+            ? Number(a.amount) - Number(b.amount)
+            : Number(b.amount) - Number(a.amount);
+        } else if (sortConfig.key === 'date') {
+          return sortConfig.direction === 'ascending' 
+            ? new Date(a.date).getTime() - new Date(b.date).getTime()
+            : new Date(b.date).getTime() - new Date(a.date).getTime();
+        } else {
+          // Default string comparison for other columns
+          if (a[sortConfig.key] < b[sortConfig.key]) {
+            return sortConfig.direction === 'ascending' ? -1 : 1;
+          }
+          if (a[sortConfig.key] > b[sortConfig.key]) {
+            return sortConfig.direction === 'ascending' ? 1 : -1;
+          }
+          return 0;
+        }
+      });
+    }
+    return sortableItems;
+  }, [expenses, sortConfig]);
 
   // Category badge variants
   const getCategoryVariant = (category: string) => {
@@ -72,15 +112,43 @@ export function ExpenseList({ expenses }: ExpenseListProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Description</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Amount</TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={() => requestSort('description')}
+            >
+              Description {sortConfig?.key === 'description' && (
+                <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+              )}
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={() => requestSort('category')}
+            >
+              Category {sortConfig?.key === 'category' && (
+                <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+              )}
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={() => requestSort('date')}
+            >
+              Date {sortConfig?.key === 'date' && (
+                <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+              )}
+            </TableHead>
+            <TableHead 
+              className="cursor-pointer hover:bg-muted/50"
+              onClick={() => requestSort('amount')}
+            >
+              Amount {sortConfig?.key === 'amount' && (
+                <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+              )}
+            </TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {expenses.map((expense) => (
+          {sortedExpenses.map((expense) => (
             <TableRow key={expense.id}>
               <TableCell className="text-sm font-medium">{expense.description}</TableCell>
               <TableCell>
