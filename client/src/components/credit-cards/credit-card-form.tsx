@@ -54,11 +54,30 @@ const creditCardSchema = insertCreditCardSchema.omit({ userId: true }).extend({
 
 type CreditCardFormValues = z.infer<typeof creditCardSchema>;
 
-export function CreditCardForm() {
+interface CreditCardFormProps {
+  isEditing?: boolean;
+}
+
+export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+  const cardId = isEditing ? location.split('/').pop() : null;
 
+  // Fetch credit card data if editing
+  const { data: card, isLoading: isLoadingCard } = useQuery({
+    queryKey: ["/api/credit-cards", cardId],
+    queryFn: async () => {
+      if (!cardId) return null;
+      const response = await fetch(`/api/credit-cards/${cardId}`);
+      if (!response.ok) {
+        throw new Error("Credit card not found");
+      }
+      return response.json();
+    },
+    enabled: !!cardId,
+  });
+  
   const form = useForm<CreditCardFormValues>({
     resolver: zodResolver(creditCardSchema),
     defaultValues: {
@@ -73,6 +92,23 @@ export function CreditCardForm() {
       color: "#3b82f6",
     },
   });
+  
+  // Update form when card data is loaded
+  React.useEffect(() => {
+    if (card && isEditing) {
+      form.reset({
+        name: card.name,
+        bank: card.bank,
+        creditLimit: card.creditLimit.toString(),
+        currentBalance: card.currentBalance.toString(),
+        statementDate: card.statementDate.split('T')[0], // Format ISO date to YYYY-MM-DD
+        dueDate: card.dueDate.split('T')[0], // Format ISO date to YYYY-MM-DD
+        minPaymentPercent: card.minPaymentPercent.toString(),
+        currency: card.currency,
+        color: card.color,
+      });
+    }
+  }, [card, form, isEditing]);
   
   const currencies = ["TRY", "USD", "EUR", "GBP"]; // TRY first as default
 

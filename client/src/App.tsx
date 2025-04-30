@@ -28,6 +28,7 @@ function Router() {
       <ProtectedRoute path="/" component={DashboardPage} />
       <ProtectedRoute path="/credit-cards" component={CreditCardsPage} />
       <ProtectedRoute path="/credit-cards/new" component={() => <CreditCardForm />} />
+      <ProtectedRoute path="/credit-cards/edit/:id" component={() => <CreditCardForm isEditing={true} />} />
       <ProtectedRoute path="/assets" component={AssetsPage} />
       <ProtectedRoute path="/assets/new" component={() => <AssetForm />} />
       <ProtectedRoute path="/assets/edit/:id" component={() => <AssetForm isEditing={true} />} />
