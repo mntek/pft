@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Expense } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
 import {
   Dialog,
