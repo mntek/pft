@@ -19,7 +19,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MainLayout } from "@/components/layout/main-layout";
 import { ArrowLeft } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -50,14 +49,14 @@ export function AssetForm() {
       type: "bank",
       assetType: "",
       institution: "",
-      currency: "USD",
+      currency: "TRY", // Changed default to TRY
       amount: "",
     },
   });
 
   const bankAssetTypes = ["Checking", "Savings", "Time Deposit", "Stocks"];
   const nonBankAssetTypes = ["Cash", "Crypto", "Physical Gold"];
-  const currencies = ["USD", "EUR", "TRY", "GBP"];
+  const currencies = ["TRY", "USD", "EUR", "GBP"]; // Added TRY first
 
   const createAssetMutation = useMutation({
     mutationFn: async (values: AssetFormValues) => {
@@ -98,166 +97,164 @@ export function AssetForm() {
   const assetTypes = watchType === "bank" ? bankAssetTypes : nonBankAssetTypes;
 
   return (
-    <MainLayout title="Add Asset">
-      <div className="space-y-6">
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/assets")}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex items-center space-x-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/assets")}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+      </div>
 
-        <Card className="p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <Card className="p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Asset Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex flex-col space-y-1"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="bank" id="bank" />
+                        <label htmlFor="bank" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Bank Asset
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="non-bank" id="non-bank" />
+                        <label htmlFor="non-bank" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                          Non-Bank Asset
+                        </label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
-                name="type"
+                name="name"
                 render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Asset Type</FormLabel>
+                  <FormItem>
+                    <FormLabel>Asset Name</FormLabel>
                     <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="bank" id="bank" />
-                          <label htmlFor="bank" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Bank Asset
-                          </label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="non-bank" id="non-bank" />
-                          <label htmlFor="non-bank" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Non-Bank Asset
-                          </label>
-                        </div>
-                      </RadioGroup>
+                      <Input placeholder="Primary Savings Account" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              
+              <FormField
+                control={form.control}
+                name="assetType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Asset Subtype</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select asset type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {assetTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="institution"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {watchType === "bank" ? "Bank Name" : "Location"}
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder={watchType === "bank" ? "City Bank" : "Wallet, Exchange, Safe, etc."} 
+                        {...field} 
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {currencies.map((currency) => (
+                          <SelectItem key={currency} value={currency}>
+                            {currency}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input placeholder="1000.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Asset Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Primary Savings Account" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="assetType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Asset Subtype</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select asset type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {assetTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="institution"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {watchType === "bank" ? "Bank Name" : "Location"}
-                      </FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder={watchType === "bank" ? "City Bank" : "Wallet, Exchange, Safe, etc."} 
-                          {...field} 
-                          value={field.value || ""}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="currency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Currency</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {currencies.map((currency) => (
-                            <SelectItem key={currency} value={currency}>
-                              {currency}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Amount</FormLabel>
-                      <FormControl>
-                        <Input placeholder="1000.00" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="pt-4">
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={createAssetMutation.isPending}
-                >
-                  {createAssetMutation.isPending ? "Adding..." : "Add Asset"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </Card>
-      </div>
-    </MainLayout>
+            <div className="pt-4">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={createAssetMutation.isPending}
+              >
+                {createAssetMutation.isPending ? "Adding..." : "Add Asset"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </Card>
+    </div>
   );
 }
