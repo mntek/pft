@@ -255,27 +255,36 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
                     <FormLabel>Credit Limit</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="5,000.00" 
+                        placeholder="5.000,00" 
                         {...field} 
                         onChange={(e) => {
-                          // Remove all non-numeric characters except decimal point
-                          const rawValue = e.target.value.replace(/[^0-9.]/g, '');
+                          // Check if the input contains a comma, which we'll treat as decimal separator
+                          const hasComma = e.target.value.includes(',');
+                          
+                          // Remove all non-numeric characters except comma (our decimal separator)
+                          let rawValue = e.target.value.replace(/[^0-9,]/g, '');
+                          
+                          // Replace comma with dot for internal processing (JavaScript uses dot)
+                          let internalValue = rawValue.replace(/,/g, '.');
                           
                           // Format with two decimal places if there's a decimal point
-                          const parts = rawValue.split('.');
+                          const parts = internalValue.split('.');
                           let integerPart = parts[0];
                           let decimalPart = parts.length > 1 ? parts[1].substring(0, 2) : '';
                           
-                          // Add thousands separators to integer part
-                          integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                          // Add thousands separators (dots in Turkish format) to integer part
+                          integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
                           
-                          // Combine integer and decimal parts
-                          const formattedValue = decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
+                          // Combine integer and decimal parts with Turkish formatting
+                          // (dot for thousands, comma for decimal)
+                          const formattedValue = decimalPart 
+                            ? `${integerPart},${decimalPart}` 
+                            : (hasComma ? `${integerPart},` : integerPart);
                           
-                          // Update field with original value (without commas) for backend processing
-                          field.onChange(rawValue);
+                          // Update field with internal value for backend processing
+                          field.onChange(internalValue);
                           
-                          // Display formatted value with commas in the input
+                          // Display formatted value in the input
                           e.target.value = formattedValue;
                         }}
                       />
@@ -293,27 +302,36 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
                     <FormLabel>Current Balance</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="0.00" 
+                        placeholder="0,00" 
                         {...field} 
                         onChange={(e) => {
-                          // Remove all non-numeric characters except decimal point
-                          const rawValue = e.target.value.replace(/[^0-9.]/g, '');
+                          // Check if the input contains a comma, which we'll treat as decimal separator
+                          const hasComma = e.target.value.includes(',');
+                          
+                          // Remove all non-numeric characters except comma (our decimal separator)
+                          let rawValue = e.target.value.replace(/[^0-9,]/g, '');
+                          
+                          // Replace comma with dot for internal processing (JavaScript uses dot)
+                          let internalValue = rawValue.replace(/,/g, '.');
                           
                           // Format with two decimal places if there's a decimal point
-                          const parts = rawValue.split('.');
+                          const parts = internalValue.split('.');
                           let integerPart = parts[0];
                           let decimalPart = parts.length > 1 ? parts[1].substring(0, 2) : '';
                           
-                          // Add thousands separators to integer part
-                          integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                          // Add thousands separators (dots in Turkish format) to integer part
+                          integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
                           
-                          // Combine integer and decimal parts
-                          const formattedValue = decimalPart ? `${integerPart}.${decimalPart}` : integerPart;
+                          // Combine integer and decimal parts with Turkish formatting
+                          // (dot for thousands, comma for decimal)
+                          const formattedValue = decimalPart 
+                            ? `${integerPart},${decimalPart}` 
+                            : (hasComma ? `${integerPart},` : integerPart);
                           
-                          // Update field with original value (without commas) for backend processing
-                          field.onChange(rawValue);
+                          // Update field with internal value for backend processing
+                          field.onChange(internalValue);
                           
-                          // Display formatted value with commas in the input
+                          // Display formatted value in the input
                           e.target.value = formattedValue;
                         }}
                       />
