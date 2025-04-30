@@ -20,7 +20,10 @@ export default function CreditCardsPage() {
   const [sortConfig, setSortConfig] = React.useState<{
     key: string;
     direction: 'ascending' | 'descending';
-  } | null>(null);
+  }>({
+    key: 'name',
+    direction: 'ascending'
+  });
   
   const { data: creditCards, isLoading, error } = useQuery({
     queryKey: ["/api/credit-cards"],

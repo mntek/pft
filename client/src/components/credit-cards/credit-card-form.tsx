@@ -30,6 +30,9 @@ const CARD_COLORS = [
   { value: "#10b981", label: "Green" },
   { value: "#ef4444", label: "Red" },
   { value: "#f59e0b", label: "Yellow" },
+  { value: "#000000", label: "Black" },
+  { value: "#6b7280", label: "Grey" },
+  { value: "#78350f", label: "Brown" },
 ];
 
 const creditCardSchema = insertCreditCardSchema.omit({ userId: true }).extend({
@@ -87,7 +90,7 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
       creditLimit: "",
       statementDate: "",
       dueDate: "",
-      minPaymentPercent: "5",
+      minPaymentPercent: "40",
       currentBalance: "0",
       currency: "TRY",  // Default to Turkish Lira
       color: "#3b82f6",
@@ -251,7 +254,22 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
                   <FormItem>
                     <FormLabel>Credit Limit</FormLabel>
                     <FormControl>
-                      <Input placeholder="5000.00" {...field} />
+                      <Input 
+                        placeholder="5000.00" 
+                        {...field} 
+                        onChange={(e) => {
+                          // Only allow numbers and decimal point
+                          const value = e.target.value.replace(/[^0-9.]/g, '');
+                          // Format with two decimal places if there's a decimal point
+                          const parts = value.split('.');
+                          if (parts.length > 1) {
+                            parts[1] = parts[1].substring(0, 2); // Limit to 2 decimal places
+                            field.onChange(parts.join('.'));
+                          } else {
+                            field.onChange(value);
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -265,7 +283,22 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
                   <FormItem>
                     <FormLabel>Current Balance</FormLabel>
                     <FormControl>
-                      <Input placeholder="0.00" {...field} />
+                      <Input 
+                        placeholder="0.00" 
+                        {...field} 
+                        onChange={(e) => {
+                          // Only allow numbers and decimal point
+                          const value = e.target.value.replace(/[^0-9.]/g, '');
+                          // Format with two decimal places if there's a decimal point
+                          const parts = value.split('.');
+                          if (parts.length > 1) {
+                            parts[1] = parts[1].substring(0, 2); // Limit to 2 decimal places
+                            field.onChange(parts.join('.'));
+                          } else {
+                            field.onChange(value);
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -307,7 +340,18 @@ export function CreditCardForm({ isEditing = false }: CreditCardFormProps) {
                   <FormItem>
                     <FormLabel>Minimum Payment (%)</FormLabel>
                     <FormControl>
-                      <Input placeholder="5" {...field} />
+                      <Input 
+                        placeholder="40" 
+                        {...field} 
+                        onChange={(e) => {
+                          // Only allow numbers
+                          const value = e.target.value.replace(/[^0-9]/g, '');
+                          // Ensure the value is between 1 and 100
+                          if (value === '' || (parseInt(value) >= 0 && parseInt(value) <= 100)) {
+                            field.onChange(value);
+                          }
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
