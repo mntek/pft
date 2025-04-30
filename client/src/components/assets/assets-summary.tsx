@@ -18,13 +18,25 @@ export function AssetsSummary({ assets }: AssetsSummaryProps) {
   
   // Calculate TRY values (primary currency)
   const totalBankAssetsValue = bankAssets.reduce((total, asset) => {
-    const convertedAmount = convertToUserCurrency(asset.amount, asset.currency);
-    return total + (convertedAmount || 0);
+    // Convert to TRY explicitly to ensure we're using TRY values
+    let amountInTRY = 0;
+    if (asset.currency !== 'TRY') {
+      amountInTRY = convertToUserCurrency(Number(asset.amount), asset.currency, 'TRY');
+    } else {
+      amountInTRY = Number(asset.amount);
+    }
+    return total + amountInTRY;
   }, 0);
   
   const totalNonBankAssetsValue = nonBankAssets.reduce((total, asset) => {
-    const convertedAmount = convertToUserCurrency(asset.amount, asset.currency);
-    return total + (convertedAmount || 0);
+    // Convert to TRY explicitly to ensure we're using TRY values
+    let amountInTRY = 0;
+    if (asset.currency !== 'TRY') {
+      amountInTRY = convertToUserCurrency(Number(asset.amount), asset.currency, 'TRY');
+    } else {
+      amountInTRY = Number(asset.amount);
+    }
+    return total + amountInTRY;
   }, 0);
   
   const totalAssetsValue = totalBankAssetsValue + totalNonBankAssetsValue;

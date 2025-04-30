@@ -39,12 +39,13 @@ export default function ExpensesPage() {
     );
   }
 
+  // Safely handle currency conversion
   const { convertToUserCurrency } = useCurrencyConverter();
   
   // Group expenses by category for summary
   const expensesByCategory: Record<string, number> = {};
   const expensesByCategoryUSD: Record<string, number> = {};
-  const safeExpenses = expenses as any[] || [];
+  const safeExpenses = Array.isArray(expenses) ? expenses : [];
   
   safeExpenses.forEach((expense: any) => {
     const category = expense.category;
@@ -53,8 +54,13 @@ export default function ExpensesPage() {
       expensesByCategoryUSD[category] = 0;
     }
     
-    // Convert to default currency (TRY)
-    const amountInTRY = convertToUserCurrency(Number(expense.amount), expense.currency || 'TRY');
+    // Convert to default currency (TRY) explicitly
+    let amountInTRY = 0;
+    if ((expense.currency || 'TRY') !== 'TRY') {
+      amountInTRY = convertToUserCurrency(Number(expense.amount), expense.currency || 'TRY', 'TRY');
+    } else {
+      amountInTRY = Number(expense.amount);
+    }
     expensesByCategory[category] += amountInTRY;
     
     // Convert to USD

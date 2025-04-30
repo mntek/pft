@@ -14,13 +14,25 @@ export function CreditCardsSummary({ creditCards }: CreditCardsSummaryProps) {
   
   // Calculate total values with proper currency conversion to TRY (primary currency)
   const totalCreditLimit = creditCards.reduce((total, card) => {
-    const convertedAmount = convertToUserCurrency(Number(card.creditLimit || 0), card.currency || 'TRY');
-    return total + (convertedAmount || 0);
+    // Convert to TRY explicitly to ensure we're using TRY values
+    let amountInTRY = 0;
+    if ((card.currency || 'TRY') !== 'TRY') {
+      amountInTRY = convertToUserCurrency(Number(card.creditLimit || 0), card.currency || 'TRY', 'TRY');
+    } else {
+      amountInTRY = Number(card.creditLimit || 0);
+    }
+    return total + amountInTRY;
   }, 0);
   
   const totalCurrentBalance = creditCards.reduce((total, card) => {
-    const convertedAmount = convertToUserCurrency(Number(card.currentBalance || 0), card.currency || 'TRY');
-    return total + (convertedAmount || 0);
+    // Convert to TRY explicitly to ensure we're using TRY values
+    let amountInTRY = 0;
+    if ((card.currency || 'TRY') !== 'TRY') {
+      amountInTRY = convertToUserCurrency(Number(card.currentBalance || 0), card.currency || 'TRY', 'TRY');
+    } else {
+      amountInTRY = Number(card.currentBalance || 0);
+    }
+    return total + amountInTRY;
   }, 0);
   
   const totalAvailableCredit = totalCreditLimit - totalCurrentBalance;
