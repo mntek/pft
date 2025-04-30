@@ -23,7 +23,7 @@ import { ArrowLeft } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const assetSchema = insertAssetSchema.omit({ userId: true, lastUpdated: true }).extend({
+const assetSchema = insertAssetSchema.omit({ userId: true }).extend({
   name: z.string().min(2, "Asset name must be at least 2 characters"),
   type: z.enum(["bank", "non-bank"]),
   assetType: z.string().min(1, "Asset type is required"),
@@ -61,12 +61,12 @@ export function AssetForm() {
   const createAssetMutation = useMutation({
     mutationFn: async (values: AssetFormValues) => {
       // Keep values as strings since that's what the schema expects
-      // Make sure lastUpdated is a valid ISO string
+      // lastUpdated is automatically set by the database
       const processedValues = {
         ...values,
         userId: user!.id,
         amount: values.amount, // Keep as string
-        lastUpdated: new Date().toISOString(), // This generates a proper date string
+        // No need to set lastUpdated - it has a default value in the database
       };
       
       const response = await apiRequest("POST", "/api/assets", processedValues);

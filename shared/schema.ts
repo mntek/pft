@@ -50,11 +50,12 @@ export const assets = pgTable("assets", {
   institution: text("institution"), // Bank name or location
   currency: text("currency").notNull(),
   amount: numeric("amount").notNull(),
-  lastUpdated: timestamp("last_updated").notNull(),
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
 });
 
 export const insertAssetSchema = createInsertSchema(assets).omit({
   id: true,
+  lastUpdated: true,
 });
 
 // Income schema
