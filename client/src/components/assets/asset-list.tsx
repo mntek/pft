@@ -1,7 +1,9 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
+import { useCurrencyConverter } from "@/hooks/use-currency-converter";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Asset } from "@shared/schema";
@@ -34,6 +36,8 @@ export function AssetList({ assets, type }: AssetListProps) {
     key: string;
     direction: 'ascending' | 'descending';
   } | null>(null);
+  
+  const { formatInUserCurrency } = useCurrencyConverter();
   
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -182,6 +186,11 @@ export function AssetList({ assets, type }: AssetListProps) {
                 <TableCell className="text-sm">{asset.currency}</TableCell>
                 <TableCell className="font-mono text-green-500">
                   {formatCurrency(Number(asset.amount), asset.currency)}
+                  {asset.currency !== 'TRY' && (
+                    <div className="text-xs text-muted-foreground">
+                      {formatInUserCurrency(Number(asset.amount), asset.currency)}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {formatDate(asset.lastUpdated)}

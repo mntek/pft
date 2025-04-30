@@ -9,6 +9,7 @@ export type CurrencyOption = {
 
 // List of supported currencies with symbols
 export const CURRENCIES: CurrencyOption[] = [
+  { value: 'TRY', label: 'Turkish Lira', symbol: '₺' },
   { value: 'USD', label: 'US Dollar', symbol: '$' },
   { value: 'EUR', label: 'Euro', symbol: '€' },
   { value: 'GBP', label: 'British Pound', symbol: '£' },

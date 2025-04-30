@@ -83,18 +83,18 @@ export function CreditCardList({ creditCards }: CreditCardListProps) {
                       </div>
                     </TableCell>
                     <TableCell className="font-mono text-red-500">
-                      {formatInUserCurrency(Number(card.currentBalance), cardCurrency)}
-                      {cardCurrency !== userCurrency && (
+                      {formatCurrency(Number(card.currentBalance), cardCurrency)}
+                      {cardCurrency !== 'TRY' && (
                         <div className="text-xs text-muted-foreground">
-                          {formatCurrency(Number(card.currentBalance), cardCurrency)}
+                          {formatInUserCurrency(Number(card.currentBalance), cardCurrency)}
                         </div>
                       )}
                     </TableCell>
                     <TableCell className="font-mono">
-                      {formatInUserCurrency(Number(card.creditLimit), cardCurrency)}
-                      {cardCurrency !== userCurrency && (
+                      {formatCurrency(Number(card.creditLimit), cardCurrency)}
+                      {cardCurrency !== 'TRY' && (
                         <div className="text-xs text-muted-foreground">
-                          {formatCurrency(Number(card.creditLimit), cardCurrency)}
+                          {formatInUserCurrency(Number(card.creditLimit), cardCurrency)}
                         </div>
                       )}
                     </TableCell>
