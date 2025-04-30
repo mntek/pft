@@ -12,7 +12,7 @@ interface CreditCardsSummaryProps {
 export function CreditCardsSummary({ creditCards }: CreditCardsSummaryProps) {
   const { convertToUserCurrency } = useCurrencyConverter();
   
-  // Calculate total values with proper currency conversion
+  // Calculate total values with proper currency conversion to TRY (primary currency)
   const totalCreditLimit = creditCards.reduce((total, card) => {
     const convertedAmount = convertToUserCurrency(Number(card.creditLimit || 0), card.currency || 'TRY');
     return total + (convertedAmount || 0);
@@ -29,10 +29,24 @@ export function CreditCardsSummary({ creditCards }: CreditCardsSummaryProps) {
   const utilizationPercentage = totalCreditLimit > 0 
     ? (totalCurrentBalance / totalCreditLimit) * 100 
     : 0;
+    
+  // Calculate total values with proper currency conversion to USD (secondary currency)
+  const totalCreditLimitUSD = creditCards.reduce((total, card) => {
+    const convertedAmount = convertToUserCurrency(Number(card.creditLimit || 0), card.currency || 'TRY', 'USD');
+    return total + (convertedAmount || 0);
+  }, 0);
+  
+  const totalCurrentBalanceUSD = creditCards.reduce((total, card) => {
+    const convertedAmount = convertToUserCurrency(Number(card.currentBalance || 0), card.currency || 'TRY', 'USD');
+    return total + (convertedAmount || 0);
+  }, 0);
+  
+  const totalAvailableCreditUSD = totalCreditLimitUSD - totalCurrentBalanceUSD;
   
   interface CardData {
     title: string;
     value?: number;
+    valueUSD?: number;
     valueFormatted?: string;
     icon: React.ElementType;
     iconColor: string;
@@ -43,6 +57,7 @@ export function CreditCardsSummary({ creditCards }: CreditCardsSummaryProps) {
     {
       title: "Total Credit Limit",
       value: totalCreditLimit,
+      valueUSD: totalCreditLimitUSD,
       icon: CreditCard,
       iconColor: "text-blue-500 dark:text-blue-400",
       bgColor: "bg-blue-50 dark:bg-blue-950",
@@ -50,6 +65,7 @@ export function CreditCardsSummary({ creditCards }: CreditCardsSummaryProps) {
     {
       title: "Current Balance",
       value: totalCurrentBalance,
+      valueUSD: totalCurrentBalanceUSD,
       icon: Banknote,
       iconColor: "text-red-500 dark:text-red-400",
       bgColor: "bg-red-50 dark:bg-red-950",
@@ -57,6 +73,7 @@ export function CreditCardsSummary({ creditCards }: CreditCardsSummaryProps) {
     {
       title: "Available Credit",
       value: totalAvailableCredit,
+      valueUSD: totalAvailableCreditUSD,
       icon: PiggyBank,
       iconColor: "text-green-500 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-950",
@@ -81,6 +98,11 @@ export function CreditCardsSummary({ creditCards }: CreditCardsSummaryProps) {
                 <h3 className="text-2xl font-bold mt-1">
                   {card.valueFormatted || formatCurrency(card.value || 0, 'TRY')}
                 </h3>
+                {!card.valueFormatted && card.valueUSD !== undefined && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatCurrency(card.valueUSD, 'USD')}
+                  </p>
+                )}
               </div>
               <div className={`p-3 rounded-full ${card.bgColor}`}>
                 <card.icon className={`h-5 w-5 ${card.iconColor}`} />

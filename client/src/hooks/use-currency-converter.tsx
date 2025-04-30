@@ -13,20 +13,24 @@ export function useCurrencyConverter() {
   const userCurrency = user?.defaultCurrency || 'TRY';
 
   /**
-   * Convert an amount from one currency to the user's preferred currency
+   * Convert an amount from one currency to another currency (default is user's preferred currency)
    */
-  const convertToUserCurrency = (amount: number | string, fromCurrency: string = 'TRY'): number => {
+  const convertToUserCurrency = (
+    amount: number | string, 
+    fromCurrency: string = 'TRY', 
+    toCurrency: string = userCurrency
+  ): number => {
     if (!rates || rates.length === 0) return parseFloat(amount.toString());
     
     const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     
-    // If already in the user's currency, no conversion needed
-    if (fromCurrency === userCurrency) {
+    // If already in the target currency, no conversion needed
+    if (fromCurrency === toCurrency) {
       return numericAmount;
     }
     
-    // Convert to user's preferred currency
-    const rate = getRate(fromCurrency, userCurrency);
+    // Convert to target currency
+    const rate = getRate(fromCurrency, toCurrency);
     return numericAmount * rate;
   };
 
