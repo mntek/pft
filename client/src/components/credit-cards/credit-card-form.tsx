@@ -47,6 +47,7 @@ const creditCardSchema = insertCreditCardSchema.omit({ userId: true }).extend({
     (val) => !isNaN(parseFloat(val)) && parseFloat(val) >= 0,
     { message: "Current balance must be a positive number or zero" }
   ),
+  currency: z.string().min(1, "Currency is required"),
   color: z.string().min(1, "Card color is required"),
 });
 
@@ -67,9 +68,12 @@ export function CreditCardForm() {
       dueDate: "",
       minPaymentPercent: "5",
       currentBalance: "0",
+      currency: "TRY",  // Default to Turkish Lira
       color: "#3b82f6",
     },
   });
+  
+  const currencies = ["TRY", "USD", "EUR", "GBP"]; // TRY first as default
 
   const createCardMutation = useMutation({
     mutationFn: async (values: CreditCardFormValues) => {
@@ -220,6 +224,31 @@ export function CreditCardForm() {
                     <FormControl>
                       <Input placeholder="5" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Currency</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select currency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {currencies.map((currency) => (
+                          <SelectItem key={currency} value={currency}>
+                            {currency}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

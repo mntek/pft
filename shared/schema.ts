@@ -64,7 +64,7 @@ export const incomes = pgTable("incomes", {
   source: text("source").notNull(),
   type: text("type").notNull(), // 'fixed' or 'additional'
   amount: numeric("amount").notNull(),
-  currency: text("currency").default("USD").notNull(),
+  currency: text("currency").default("TRY").notNull(),
   date: date("date").notNull(),
 });
 
@@ -79,7 +79,7 @@ export const expenses = pgTable("expenses", {
   description: text("description").notNull(),
   category: text("category").notNull(),
   amount: numeric("amount").notNull(),
-  currency: text("currency").default("USD").notNull(),
+  currency: text("currency").default("TRY").notNull(),
   date: date("date").notNull(),
 });
 
