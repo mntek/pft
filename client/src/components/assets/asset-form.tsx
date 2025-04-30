@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { insertAssetSchema } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -37,11 +37,30 @@ const assetSchema = insertAssetSchema.omit({ userId: true }).extend({
 
 type AssetFormValues = z.infer<typeof assetSchema>;
 
-export function AssetForm() {
+interface AssetFormProps {
+  isEditing?: boolean;
+}
+
+export function AssetForm({ isEditing = false }: AssetFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [, navigate] = useLocation();
-
+  const [location, navigate] = useLocation();
+  const assetId = isEditing ? location.split('/').pop() : null;
+  
+  // Fetch asset data if editing
+  const { data: asset, isLoading: isLoadingAsset } = useQuery({
+    queryKey: ["/api/assets", assetId],
+    queryFn: async () => {
+      if (!assetId) return null;
+      const response = await fetch(`/api/assets/${assetId}`);
+      if (!response.ok) {
+        throw new Error("Asset not found");
+      }
+      return response.json();
+    },
+    enabled: !!assetId,
+  });
+  
   const form = useForm<AssetFormValues>({
     resolver: zodResolver(assetSchema),
     defaultValues: {
@@ -53,6 +72,20 @@ export function AssetForm() {
       amount: "",
     },
   });
+  
+  // Update form when asset data is loaded
+  React.useEffect(() => {
+    if (asset && isEditing) {
+      form.reset({
+        name: asset.name,
+        type: asset.type,
+        assetType: asset.assetType,
+        institution: asset.institution || "",
+        currency: asset.currency,
+        amount: asset.amount.toString(),
+      });
+    }
+  }, [asset, form, isEditing]);
 
   const bankAssetTypes = ["Checking", "Savings", "Time Deposit", "Stocks"];
   const nonBankAssetTypes = ["Cash", "Crypto", "Physical Gold"];
@@ -90,8 +123,42 @@ export function AssetForm() {
     },
   });
 
+  const updateAssetMutation = useMutation({
+    mutationFn: async (values: AssetFormValues) => {
+      if (!assetId) throw new Error("Asset ID is required for updates");
+      
+      const processedValues = {
+        ...values,
+        amount: values.amount, // Keep as string
+      };
+      
+      const response = await apiRequest("PUT", `/api/assets/${assetId}`, processedValues);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Asset updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      navigate("/assets");
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to update asset: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+
   function onSubmit(values: AssetFormValues) {
-    createAssetMutation.mutate(values);
+    if (isEditing) {
+      updateAssetMutation.mutate(values);
+    } else {
+      createAssetMutation.mutate(values);
+    }
   }
 
   const watchType = form.watch("type");
@@ -248,9 +315,12 @@ export function AssetForm() {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={createAssetMutation.isPending}
+                disabled={createAssetMutation.isPending || updateAssetMutation.isPending}
               >
-                {createAssetMutation.isPending ? "Adding..." : "Add Asset"}
+                {isEditing 
+                  ? (updateAssetMutation.isPending ? "Updating..." : "Update Asset") 
+                  : (createAssetMutation.isPending ? "Adding..." : "Add Asset")
+                }
               </Button>
             </div>
           </form>

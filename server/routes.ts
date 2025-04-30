@@ -123,6 +123,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to create asset" });
     }
   });
+  
+  app.get("/api/assets/:id", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const userId = req.user!.id;
+      
+      // Verify asset belongs to user
+      const asset = await storage.getAsset(id);
+      if (!asset || asset.userId !== userId) {
+        return res.status(404).json({ message: "Asset not found" });
+      }
+      
+      res.json(asset);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch asset" });
+    }
+  });
 
   app.put("/api/assets/:id", isAuthenticated, async (req, res) => {
     try {
