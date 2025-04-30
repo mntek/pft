@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Format currency with symbol based on currency code
-export function formatCurrency(amount: number | string, currency: string = 'USD') {
+export function formatCurrency(amount: number | string, currency: string = 'TRY') {
   const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
   
   const currencySymbols: Record<string, string> = {

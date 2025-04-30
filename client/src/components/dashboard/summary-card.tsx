@@ -17,7 +17,7 @@ interface SummaryCardProps {
 export function SummaryCard({
   title,
   amount,
-  currency = "USD",
+  currency = "TRY",
   change,
   icon,
   iconClassName = "bg-primary bg-opacity-20 text-primary",
