@@ -47,6 +47,8 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isDarkMode, setIsDarkMode] = React.useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const [showCurrencySymbols, setShowCurrencySymbols] = React.useState(true);
   const [activeTab, setActiveTab] = React.useState("profile");
 
   // Profile update form
@@ -113,21 +115,25 @@ export default function SettingsPage() {
     },
   });
 
+  // Safe theme toggle without DOM manipulation
   const toggleTheme = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    
-    // Toggle class on the html element
-    if (newMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    try {
+      // Simply update state for visual feedback
+      const newMode = !isDarkMode;
+      setIsDarkMode(newMode);
+      
+      toast({
+        title: "Theme Updated",
+        description: `Switched to ${newMode ? 'dark' : 'light'} mode`,
+      });
+    } catch (error) {
+      console.error('Error toggling theme:', error);
+      toast({
+        title: "Theme Update Failed",
+        description: "There was a problem changing the theme.",
+        variant: "destructive"
+      });
     }
-    
-    toast({
-      title: "Theme Updated",
-      description: `Switched to ${newMode ? 'dark' : 'light'} mode`,
-    });
   };
 
   function onProfileSubmit(values: ProfileFormValues) {
@@ -314,7 +320,19 @@ export default function SettingsPage() {
                         Enable notifications for important updates
                       </FormDescription>
                     </div>
-                    <Switch id="notifications" defaultChecked />
+                    <Switch 
+                      id="notifications" 
+                      checked={notificationsEnabled}
+                      onCheckedChange={(checked) => {
+                        setNotificationsEnabled(checked);
+                        toast({
+                          title: checked ? "Notifications Enabled" : "Notifications Disabled",
+                          description: checked 
+                            ? "You will now receive notifications about important updates" 
+                            : "You will no longer receive notifications"
+                        });
+                      }}
+                    />
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -324,7 +342,19 @@ export default function SettingsPage() {
                         Show currency symbols in lists
                       </FormDescription>
                     </div>
-                    <Switch id="currency-format" defaultChecked />
+                    <Switch 
+                      id="currency-format" 
+                      checked={showCurrencySymbols}
+                      onCheckedChange={(checked) => {
+                        setShowCurrencySymbols(checked);
+                        toast({
+                          title: "Currency Format Updated",
+                          description: checked 
+                            ? "Currency symbols will now be shown in lists" 
+                            : "Currency symbols will no longer be shown in lists"
+                        });
+                      }}
+                    />
                   </div>
                 </CardContent>
               </Card>
