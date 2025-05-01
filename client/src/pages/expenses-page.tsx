@@ -4,23 +4,27 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { PlusCircle, Loader2, Receipt } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/currency";
+import { formatDate } from "@/lib/utils";
+import { Pencil, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ExpenseList } from "@/components/expenses/expense-list";
-import { ExpenseCategories } from "@/components/expenses/expense-categories";
-import { useCurrencyConverter } from "@/hooks/use-currency-converter";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useMutation } from "@tanstack/react-query";
 
 export default function ExpensesPage() {
   // Basic state
   const [, navigate] = useLocation();
   const [selectedCategory, setSelectedCategory] = React.useState("all");
+  const { toast } = useToast();
+  const [expenseToDelete, setExpenseToDelete] = React.useState<number | null>(null);
   
   // Fetch expenses data
   const { data: expenses, isLoading, error } = useQuery({
     queryKey: ["/api/expenses"],
   });
-
-  // Get currency converter
-  const { convertToUserCurrency } = useCurrencyConverter();
   
   // Show loading state
   if (isLoading) {
@@ -47,83 +51,81 @@ export default function ExpensesPage() {
   }
 
   // Ensure expenses is an array
-  const safeExpenses = React.useMemo(() => {
-    try {
-      return Array.isArray(expenses) ? expenses : [];
-    } catch (e) {
-      console.error("Error processing expenses:", e);
-      return [];
-    }
-  }, [expenses]);
-
-  // Process expense categories
-  const { expensesByCategory, expensesByCategoryUSD, categories } = React.useMemo(() => {
-    try {
-      const byCategory: Record<string, number> = {};
-      const byCategoryUSD: Record<string, number> = {};
+  const safeExpenses = Array.isArray(expenses) ? expenses : [];
+  
+  // Get unique categories
+  const allCategories = React.useMemo(() => {
+    const categories = new Set<string>();
+    safeExpenses.forEach((expense: any) => {
+      if (expense && expense.category) {
+        categories.add(expense.category);
+      }
+    });
+    return Array.from(categories);
+  }, [safeExpenses]);
+  
+  // Category totals
+  const categoryTotals = React.useMemo(() => {
+    const result: Record<string, { amount: number, count: number }> = {};
+    
+    safeExpenses.forEach((expense: any) => {
+      if (!expense || !expense.category) return;
       
-      // Process each expense
-      safeExpenses.forEach((expense: any) => {
-        if (!expense || !expense.category) return;
-        
-        const category = expense.category;
-        if (!byCategory[category]) {
-          byCategory[category] = 0;
-          byCategoryUSD[category] = 0;
-        }
-        
-        // Parse amount safely
-        const amount = typeof expense.amount === 'number' ? expense.amount : 
-                      (typeof expense.amount === 'string' ? parseFloat(expense.amount) : 0);
-        
-        // Convert to TRY
-        let amountInTRY = 0;
-        try {
-          if ((expense.currency || 'TRY') !== 'TRY') {
-            amountInTRY = convertToUserCurrency(amount, expense.currency || 'TRY', 'TRY');
-          } else {
-            amountInTRY = amount;
-          }
-          byCategory[category] += amountInTRY || 0;
-        } catch (e) {
-          console.error("Error converting to TRY:", e);
-        }
-        
-        // Convert to USD
-        try {
-          const amountInUSD = convertToUserCurrency(amount, expense.currency || 'TRY', 'USD');
-          byCategoryUSD[category] += amountInUSD || 0;
-        } catch (e) {
-          console.error("Error converting to USD:", e);
-        }
-      });
+      const category = expense.category;
+      if (!result[category]) {
+        result[category] = { amount: 0, count: 0 };
+      }
       
-      return { 
-        expensesByCategory: byCategory, 
-        expensesByCategoryUSD: byCategoryUSD,
-        categories: Object.keys(byCategory)
-      };
-    } catch (e) {
-      console.error("Error calculating expense categories:", e);
-      return { 
-        expensesByCategory: {}, 
-        expensesByCategoryUSD: {},
-        categories: []
-      };
-    }
-  }, [safeExpenses, convertToUserCurrency]);
-
+      const amount = typeof expense.amount === 'number' ? expense.amount : 
+                    (typeof expense.amount === 'string' ? parseFloat(expense.amount) : 0);
+      
+      result[category].amount += amount;
+      result[category].count += 1;
+    });
+    
+    return result;
+  }, [safeExpenses]);
+  
   // Filter expenses by selected category
   const filteredExpenses = React.useMemo(() => {
-    try {
-      return selectedCategory === 'all' 
-        ? safeExpenses 
-        : safeExpenses.filter((expense: any) => expense && expense.category === selectedCategory);
-    } catch (e) {
-      console.error("Error filtering expenses:", e);
-      return [];
-    }
+    return selectedCategory === 'all' 
+      ? safeExpenses 
+      : safeExpenses.filter((expense: any) => expense && expense.category === selectedCategory);
   }, [safeExpenses, selectedCategory]);
+  
+  // Handle delete
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/expenses/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Expense deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      setExpenseToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: `Failed to delete expense: ${error.message}`,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Get category badge color
+  const getCategoryVariant = (category: string) => {
+    switch (category) {
+      case 'Education': return 'warning';
+      case 'Health': return 'success';
+      case 'Travel': return 'info';
+      case 'Shopping': return 'secondary';
+      default: return 'default';
+    }
+  };
 
   return (
     <>
@@ -140,10 +142,29 @@ export default function ExpensesPage() {
         </div>
 
         {/* Expense Categories */}
-        <ExpenseCategories 
-          expensesByCategory={expensesByCategory} 
-          expensesByCategoryUSD={expensesByCategoryUSD}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Object.entries(categoryTotals).length === 0 ? (
+            <div className="md:col-span-4 text-center py-4 text-muted-foreground">
+              No expense categories to display. Add your first expense to get started.
+            </div>
+          ) : (
+            Object.entries(categoryTotals).map(([category, { amount, count }]) => (
+              <div key={category} className="rounded-lg border bg-card p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm text-muted-foreground">{category}</p>
+                    <p className="text-2xl font-mono font-semibold text-red-500">
+                      {formatCurrency(amount || 0, 'TRY')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {count} {count === 1 ? 'expense' : 'expenses'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
 
         {/* Expense List */}
         <Card className="p-4">
@@ -155,7 +176,7 @@ export default function ExpensesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
+                {allCategories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
                   </SelectItem>
@@ -179,7 +200,72 @@ export default function ExpensesPage() {
               </Button>
             </div>
           ) : (
-            <ExpenseList expenses={filteredExpenses} />
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredExpenses.map((expense: any) => (
+                    <TableRow key={expense.id || 'unknown'}>
+                      <TableCell className="text-sm font-medium">{expense.description || 'Unknown'}</TableCell>
+                      <TableCell>
+                        {expense.category ? (
+                          <Badge variant={getCategoryVariant(expense.category)}>
+                            {expense.category}
+                          </Badge>
+                        ) : (
+                          <Badge variant="default">Uncategorized</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm">{expense.date ? formatDate(expense.date) : 'N/A'}</TableCell>
+                      <TableCell className="font-mono font-semibold text-red-500">
+                        {formatCurrency(-(expense.amount ? Number(expense.amount) : 0), expense.currency || 'TRY')}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (expense.id) {
+                                navigate(`/expenses/edit/${expense.id}`);
+                              }
+                            }}
+                            disabled={!expense.id}
+                            className="flex items-center"
+                          >
+                            <Pencil className="h-4 w-4 mr-1" /> Edit
+                          </Button>
+                          
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              if (expense.id && confirm("Are you sure you want to delete this expense?")) {
+                                setExpenseToDelete(expense.id);
+                                deleteMutation.mutate(expense.id);
+                              }
+                            }}
+                            disabled={!expense.id || (deleteMutation.isPending && expenseToDelete === expense.id)}
+                            className="flex items-center"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            {deleteMutation.isPending && expenseToDelete === expense.id ? "Deleting..." : "Delete"}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </Card>
       </div>
