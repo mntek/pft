@@ -1,0 +1,102 @@
+
+
+````markdown
+## ❗ Issue: WebSocket connection closed immediately on page load
+
+### ⏱ Behavior:
+- Error appears immediately after loading the component.
+- The screen stays blank.
+- No delay or timeout — the WebSocket closes right away.
+
+---
+
+### 🔍 Context:
+- App is built with React (Next.js-like architecture).
+- React Query is used for data fetching.
+- The `useQuery` hook for `/api/expenses` runs on component mount.
+- Replit Pro version is used (no sleeping instance).
+
+---
+
+### ✅ Verified:
+- No timeout behavior
+- No rate limits
+- Replit project is active and paid
+
+---
+
+### ⚠️ Potential Causes & Suggestions:
+
+#### 1. ❌ Missing `queryFn` in `useQuery`
+The query hook is defined like this:
+
+```ts
+const { data: expenses } = useQuery({
+  queryKey: ["/api/expenses"]
+});
+````
+
+But there's **no queryFn defined**, so the React Query client doesn't know what to do.
+This can cause a failed background fetch and may return a WebSocket closure error from the dev tools.
+
+✅ Suggested fix:
+
+```ts
+const { data: expenses } = useQuery({
+  queryKey: ["/api/expenses"],
+  queryFn: async () => {
+    const res = await apiRequest("GET", "/api/expenses");
+    return res.data;
+  },
+});
+```
+
+---
+
+#### 2. 🔒 Internal Replit proxy/WS policy
+
+Replit's infrastructure might be interrupting non-standard fetch behavior or unexpected early socket calls. If a component (or API proxy) attempts a WebSocket negotiation without a backend listener or through an incorrect port, Replit's internal routing could close the connection instantly.
+
+✅ Suggested fix:
+
+* Ensure no WebSocket or long polling is being initiated unless supported
+* Disable background sync or Live reload if using SW or WebSocket for dev
+* Check if `/api/expenses` triggers any SSE or WS attempts in middleware
+
+---
+
+#### 3. 🧪 Backend Response Issue
+
+If the backend route `/api/expenses` returns malformed JSON, a blank response, or unexpected headers, it may cause the React Query layer to treat it as a network-level error.
+
+✅ Suggested test:
+
+```bash
+curl -i https://your-repl-name.replit.app/api/expenses
+```
+
+Check:
+
+* Status code: Should be 200
+* Content-Type: `application/json`
+* Body: Valid JSON array
+
+---
+
+#### 4. 🧱 Custom `apiRequest()` utility causing silent failure
+
+If `apiRequest()` wraps `fetch` or `axios` and does not throw errors properly, it may cause the query to resolve with `undefined`, leading to a blank render.
+
+✅ Suggested fix:
+
+* Wrap the logic inside `queryFn` in `try/catch`
+* Add logging to inspect actual result/error inside the component
+
+---
+
+### 🧩 Suggested Actions for Replit:
+
+* Confirm WebSocket or fetch proxying behavior under React Query and SSR
+* Recommend reviewing server logs or enabling verbose logging for `/api/expenses`
+* Check if `apiRequest()` or API route returns malformed headers (like 204 No Content instead of 200 OK with JSON)
+

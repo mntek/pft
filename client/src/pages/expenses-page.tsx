@@ -21,9 +21,31 @@ export default function ExpensesPage() {
   const { toast } = useToast();
   const [expenseToDelete, setExpenseToDelete] = React.useState<number | null>(null);
   
-  // Fetch expenses data
+  // Fetch expenses data with explicit queryFn
   const { data: expenses, isLoading, error } = useQuery({
     queryKey: ["/api/expenses"],
+    queryFn: async () => {
+      try {
+        console.log("Fetching expenses data...");
+        const res = await fetch("/api/expenses", {
+          credentials: "include",
+          headers: {
+            "Accept": "application/json"
+          }
+        });
+        
+        if (!res.ok) {
+          throw new Error(`Error ${res.status}: ${res.statusText}`);
+        }
+        
+        const data = await res.json();
+        console.log("Expenses data fetched successfully:", data);
+        return data;
+      } catch (err) {
+        console.error("Error fetching expenses:", err);
+        throw err;
+      }
+    }
   });
   
   // Show loading state
