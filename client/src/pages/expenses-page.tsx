@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
-import { useWebSocket } from "@/hooks/use-websocket";
 
 export default function ExpensesPage() {
   // Basic state
@@ -22,56 +21,9 @@ export default function ExpensesPage() {
   const { toast } = useToast();
   const [expenseToDelete, setExpenseToDelete] = React.useState<number | null>(null);
   
-  // Initialize WebSocket with authentication check
-  const { isAuthenticated } = useWebSocket({
-    requireAuth: true,
-    autoConnect: true,
-    onError: (error) => console.error("WebSocket error in expenses page:", error)
-  });
-  
-  // Fetch expenses data with explicit queryFn
+  // Fetch expenses data using React Query's built-in fetcher
   const { data: expenses, isLoading, error } = useQuery({
-    queryKey: ["/api/expenses"],
-    queryFn: async () => {
-      try {
-        console.log("Fetching expenses data...");
-        
-        // Check authentication first
-        const authCheck = await fetch(`${window.location.origin}/api/user`, {
-          credentials: "include",
-          headers: { "Accept": "application/json" }
-        });
-        
-        if (authCheck.status === 401) {
-          // Handle unauthenticated state gracefully
-          throw new Error("Authentication required. Please log in.");
-        }
-        
-        const res = await fetch("/api/expenses", {
-          credentials: "include",
-          headers: {
-            "Accept": "application/json",
-            "Cache-Control": "no-cache"
-          }
-        });
-        
-        if (res.status === 401) {
-          throw new Error("Authentication required. Please log in.");
-        }
-        
-        if (!res.ok) {
-          throw new Error(`Error ${res.status}: ${res.statusText}`);
-        }
-        
-        const data = await res.json();
-        console.log("Expenses data fetched successfully:", data);
-        return data;
-      } catch (err) {
-        console.error("Error fetching expenses:", err);
-        throw err;
-      }
-    },
-    enabled: isAuthenticated !== false // Only run query if not explicitly unauthenticated
+    queryKey: ["/api/expenses"]
   });
   
   // Show loading state
@@ -86,27 +38,7 @@ export default function ExpensesPage() {
     );
   }
 
-  // Show authentication error state
-  if (isAuthenticated === false) {
-    return (
-      <>
-        <h1 className="text-2xl font-bold mb-6">One-Time Expenses</h1>
-        <div className="text-center py-10">
-          <p className="text-destructive">Authentication required</p>
-          <p className="text-muted-foreground mt-2 mb-4">
-            Please log in to view your expenses.
-          </p>
-          <Button 
-            onClick={() => navigate("/auth")} 
-            variant="default" 
-            className="mt-4"
-          >
-            Go to Login
-          </Button>
-        </div>
-      </>
-    );
-  }
+  // Simple error handling for authentication issues
   
   // Show error state
   if (error) {
