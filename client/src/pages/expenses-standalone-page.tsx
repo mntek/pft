@@ -23,15 +23,53 @@ export default function ExpensesStandalonePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   
-  // Fetch expenses data using standard fetch
+  // State to track authentication status
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  
+  // Fetch expenses data using standard fetch with specific authentication handling
   useEffect(() => {
+    // Check if we're authenticated first to avoid WebSocket issues
+    async function checkAuth() {
+      try {
+        const authResponse = await fetch(`${window.location.origin}/api/user`, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Accept": "application/json"
+          }
+        });
+        
+        // If we get a 401, we're not authenticated
+        if (authResponse.status === 401) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return false;
+        }
+        
+        setIsAuthenticated(true);
+        return true;
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return false;
+      }
+    }
+    
     async function fetchExpenses() {
       try {
+        // First verify authentication
+        const isAuthed = await checkAuth();
+        if (!isAuthed) {
+          // Early return if not authenticated
+          return;
+        }
+        
         console.log("Fetching expenses data...");
         setIsLoading(true);
         setError(null);
         
-        // Use the full URL as suggested
+        // Use the full URL to avoid any path resolution issues
         const baseUrl = window.location.origin;
         const url = `${baseUrl}/api/expenses`;
         console.log("Fetching from URL:", url);
@@ -44,6 +82,14 @@ export default function ExpensesStandalonePage() {
             "Cache-Control": "no-cache"
           }
         });
+        
+        // Special handling for 401 responses based on the debug report
+        if (res.status === 401) {
+          console.log("Authentication error, redirecting to login");
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
+        }
         
         if (!res.ok) {
           console.error("Error response", res.status, res.statusText);
@@ -124,6 +170,28 @@ export default function ExpensesStandalonePage() {
     );
   }
 
+  // Show unauthenticated state
+  if (!isAuthenticated) {
+    return (
+      <>
+        <h1 className="text-2xl font-bold mb-6">One-Time Expenses (Standalone)</h1>
+        <div className="text-center py-10">
+          <p className="text-destructive">Authentication required</p>
+          <p className="text-muted-foreground mt-2 mb-4">
+            Please log in to view your expenses.
+          </p>
+          <Button 
+            onClick={() => navigate("/auth")} 
+            variant="default" 
+            className="mt-4"
+          >
+            Go to Login
+          </Button>
+        </div>
+      </>
+    );
+  }
+  
   // Show error state
   if (error) {
     return (
