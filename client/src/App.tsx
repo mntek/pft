@@ -10,6 +10,7 @@ import CreditCardsPage from "@/pages/credit-cards-page";
 import AssetsPage from "@/pages/assets-page";
 import IncomePage from "@/pages/income-page";
 import ExpensesPage from "@/pages/expenses-page";
+import ExpensesStandalonePage from "@/pages/expenses-standalone-page";
 import SettingsPage from "@/pages/settings-page";
 import RealTimePage from "@/pages/real-time-page";
 import ForgotPasswordPage from "@/pages/forgot-password-page";
@@ -35,7 +36,8 @@ function Router() {
       <ProtectedRoute path="/income" component={IncomePage} />
       <ProtectedRoute path="/income/new" component={() => <IncomeForm />} />
       <ProtectedRoute path="/income/edit/:id" component={() => <IncomeForm isEditing={true} />} />
-      <ProtectedRoute path="/expenses" component={ExpensesPage} />
+      <ProtectedRoute path="/expenses-old" component={ExpensesPage} />
+      <ProtectedRoute path="/expenses" component={ExpensesStandalonePage} />
       <ProtectedRoute path="/expenses/new" component={() => <ExpenseForm />} />
       <ProtectedRoute path="/expenses/edit/:id" component={() => <ExpenseForm isEditing={true} />} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
