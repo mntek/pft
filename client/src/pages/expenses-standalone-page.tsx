@@ -26,97 +26,54 @@ export default function ExpensesStandalonePage() {
   // State to track authentication status
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
   
-  // Fetch expenses data using standard fetch with specific authentication handling
+  // Simplified fetch with direct access
   useEffect(() => {
-    // Check if we're authenticated first to avoid WebSocket issues
-    async function checkAuth() {
+    const fetchExpenses = async () => {
       try {
-        const authResponse = await fetch(`${window.location.origin}/api/user`, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Accept": "application/json"
-          }
-        });
-        
-        // If we get a 401, we're not authenticated
-        if (authResponse.status === 401) {
-          setIsAuthenticated(false);
-          setIsLoading(false);
-          return false;
-        }
-        
-        setIsAuthenticated(true);
-        return true;
-      } catch (err) {
-        console.error("Auth check failed:", err);
-        setIsAuthenticated(false);
-        setIsLoading(false);
-        return false;
-      }
-    }
-    
-    async function fetchExpenses() {
-      try {
-        // First verify authentication
-        const isAuthed = await checkAuth();
-        if (!isAuthed) {
-          // Early return if not authenticated
-          return;
-        }
-        
-        console.log("Fetching expenses data...");
         setIsLoading(true);
         setError(null);
         
-        // Use the full URL to avoid any path resolution issues
-        const baseUrl = window.location.origin;
-        const url = `${baseUrl}/api/expenses`;
-        console.log("Fetching from URL:", url);
-        
-        const res = await fetch(url, {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Accept": "application/json",
-            "Cache-Control": "no-cache"
-          }
+        // First check authentication
+        const authResponse = await fetch('/api/user', {
+          credentials: 'include'
         });
         
-        // Special handling for 401 responses based on the debug report
-        if (res.status === 401) {
-          console.log("Authentication error, redirecting to login");
+        if (authResponse.status === 401) {
           setIsAuthenticated(false);
           setIsLoading(false);
           return;
         }
         
-        if (!res.ok) {
-          console.error("Error response", res.status, res.statusText);
-          throw new Error(`Error ${res.status}: ${res.statusText}`);
+        setIsAuthenticated(true);
+        
+        // Then fetch expenses data
+        const expensesResponse = await fetch('/api/expenses', {
+          credentials: 'include'
+        });
+        
+        if (expensesResponse.status === 401) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
         }
         
-        const contentType = res.headers.get("content-type");
-        console.log("Response content type:", contentType);
-        
-        if (!contentType || !contentType.includes('application/json')) {
-          console.error("Unexpected content type", contentType);
-          // Try to get the response as text for debugging
-          const textResponse = await res.text();
-          console.log("Non-JSON response:", textResponse);
-          throw new Error(`Unexpected content type: ${contentType}`);
+        if (!expensesResponse.ok) {
+          throw new Error(`HTTP error ${expensesResponse.status}`);
         }
         
-        const data = await res.json();
-        console.log("Expenses data fetched successfully:", data);
-        setExpenses(Array.isArray(data) ? data : []);
+        // Parse the response
+        const expensesData = await expensesResponse.json();
+        console.log("Expenses data:", expensesData);
+        
+        // Store in state
+        setExpenses(Array.isArray(expensesData) ? expensesData : []);
       } catch (err) {
-        console.error("Error fetching expenses:", err);
+        console.error("Failed to fetch expenses:", err);
         setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
         setIsLoading(false);
       }
-    }
+    };
     
     fetchExpenses();
   }, []);

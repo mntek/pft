@@ -1,5 +1,4 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { PlusCircle, Loader2, Receipt } from "lucide-react";
@@ -11,20 +10,46 @@ import { formatDate } from "@/lib/utils";
 import { Pencil, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
 
+// Simple older version of expenses page for comparison
 export default function ExpensesPage() {
   // Basic state
   const [, navigate] = useLocation();
-  const [selectedCategory, setSelectedCategory] = React.useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const { toast } = useToast();
-  const [expenseToDelete, setExpenseToDelete] = React.useState<number | null>(null);
+  const [expenseToDelete, setExpenseToDelete] = useState<number | null>(null);
   
-  // Fetch expenses data using React Query's built-in fetcher
-  const { data: expenses, isLoading, error } = useQuery({
-    queryKey: ["/api/expenses"]
-  });
+  // Data fetching state without React Query
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  
+  // Fetch expenses data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/expenses', { 
+          credentials: 'include' 
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setExpenses(Array.isArray(data) ? data : []);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching expenses:', err);
+        setError(err instanceof Error ? err : new Error(String(err)));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
   
   // Show loading state
   if (isLoading) {
@@ -122,28 +147,41 @@ export default function ExpensesPage() {
       : safeExpenses.filter((expense: any) => expense && expense.category === selectedCategory);
   }, [safeExpenses, selectedCategory]);
   
-  // Handle delete
-  const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/expenses/${id}`);
-    },
-    onSuccess: () => {
+  // Handle expense deletion directly without React Query
+  const deleteExpense = async (id: number) => {
+    try {
+      setExpenseToDelete(id);
+      
+      const response = await fetch(`/api/expenses/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "Accept": "application/json"
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      // Remove the deleted expense from the local state
+      setExpenses(expenses.filter(expense => expense.id !== id));
+      
       toast({
         title: "Success",
         description: "Expense deleted successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
-      setExpenseToDelete(null);
-    },
-    onError: (error) => {
+    } catch (error) {
+      console.error("Error deleting expense:", error);
       toast({
         title: "Error",
-        description: `Failed to delete expense: ${error.message}`,
+        description: `Failed to delete expense: ${error instanceof Error ? error.message : String(error)}`,
         variant: "destructive",
       });
-    },
-  });
+    } finally {
+      setExpenseToDelete(null);
+    }
+  };
   
   // Get category badge color
   const getCategoryVariant = (category: string) => {
@@ -278,15 +316,14 @@ export default function ExpensesPage() {
                             size="sm"
                             onClick={() => {
                               if (expense.id && confirm("Are you sure you want to delete this expense?")) {
-                                setExpenseToDelete(expense.id);
-                                deleteMutation.mutate(expense.id);
+                                deleteExpense(expense.id);
                               }
                             }}
-                            disabled={!expense.id || (deleteMutation.isPending && expenseToDelete === expense.id)}
+                            disabled={!expense.id || expenseToDelete === expense.id}
                             className="flex items-center"
                           >
                             <Trash2 className="h-4 w-4 mr-1" />
-                            {deleteMutation.isPending && expenseToDelete === expense.id ? "Deleting..." : "Delete"}
+                            {expenseToDelete === expense.id ? "Deleting..." : "Delete"}
                           </Button>
                         </div>
                       </TableCell>
